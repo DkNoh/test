@@ -24,7 +24,7 @@ public class campaignSearchController {
 
     @ResponseBody
     @GetMapping("/data")
-    public ResponseEntity<ApiResponse<PageResponseDTO<campaignSearchVO>>> getData(@ModelAttribute campaignSearchSearchRequestDTO request) {
+    public ResponseEntity<ApiResponse<PageResponseDTO<CampaignSearchVO>>> getData(@ModelAttribute campaignSearchSearchRequestDTO request) {
         return ResponseEntity.ok(ApiResponse.success(service.search(request)));
     }
 }

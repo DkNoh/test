@@ -3,7 +3,7 @@ package com.example.sms.vo.sms;
 import lombok.Data;
 
 @Data
-public class campaignSearchVO {
+public class CampaignSearchVO {
     private long rowNum;
     private String campaignId;
     private String campaignName;

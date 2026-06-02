@@ -34,26 +34,26 @@ public class MenuManageService {
      * @return 계층형으로 조립된 최상위 메뉴(Root) 리스트
      */
     @Transactional(readOnly = true)
-    public List<com.example.sms.dto.system.MenuTreeVO> getMenuTree() {
+    public List<com.example.sms.vo.system.MenuTreeVO> getMenuTree() {
         List<MenuVO> flatMenus = menuManageMapper.selectAllMenus();
-        java.util.Map<String, com.example.sms.dto.system.MenuTreeVO> map = new java.util.LinkedHashMap<>();
-        List<com.example.sms.dto.system.MenuTreeVO> rootNodes = new java.util.ArrayList<>();
+        java.util.Map<String, com.example.sms.vo.system.MenuTreeVO> map = new java.util.LinkedHashMap<>();
+        List<com.example.sms.vo.system.MenuTreeVO> rootNodes = new java.util.ArrayList<>();
 
         // 1. 모든 메뉴를 TreeVO로 변환하여 Map에 임시 저장 (키: 메뉴코드)
         for (MenuVO vo : flatMenus) {
-            com.example.sms.dto.system.MenuTreeVO treeVO = new com.example.sms.dto.system.MenuTreeVO();
+            com.example.sms.vo.system.MenuTreeVO treeVO = new com.example.sms.vo.system.MenuTreeVO();
             org.springframework.beans.BeanUtils.copyProperties(vo, treeVO);
             map.put(treeVO.getMenuCd(), treeVO);
         }
 
         // 2. 부모-자식 관계 맵핑 (Map을 순회하며 자신의 부모 객체에 자신을 삽입)
-        for (com.example.sms.dto.system.MenuTreeVO vo : map.values()) {
+        for (com.example.sms.vo.system.MenuTreeVO vo : map.values()) {
             if (vo.getUpMenuCd() == null || vo.getUpMenuCd().trim().isEmpty() || !map.containsKey(vo.getUpMenuCd())) {
                 // 부모가 없으면 최상위 루트 노드
                 rootNodes.add(vo);
             } else {
                 // 부모가 있으면 부모의 _children 리스트에 자신을 추가
-                com.example.sms.dto.system.MenuTreeVO parent = map.get(vo.getUpMenuCd());
+                com.example.sms.vo.system.MenuTreeVO parent = map.get(vo.getUpMenuCd());
                 // 자식이 최초로 추가될 때만 리스트 초기화 (빈 리스트면 TUI Grid가 폴더로 인식하는 버그 방지)
                 if (parent.get_children() == null) {
                     parent.set_children(new java.util.ArrayList<>());

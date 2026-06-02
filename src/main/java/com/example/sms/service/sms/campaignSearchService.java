@@ -16,9 +16,9 @@ public class campaignSearchService {
     private final campaignSearchMapper mapper;
 
     @Transactional(readOnly = true)
-    public PageResponseDTO<campaignSearchVO> search(campaignSearchSearchRequestDTO request) {
+    public PageResponseDTO<CampaignSearchVO> search(campaignSearchSearchRequestDTO request) {
         int totalCount = mapper.count(request);
-        List<campaignSearchVO> list = mapper.selectList(request);
+        List<CampaignSearchVO> list = mapper.selectList(request);
         return PageResponseDTO.of(list, request, totalCount);
     }
 }

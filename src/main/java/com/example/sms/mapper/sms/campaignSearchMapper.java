@@ -8,5 +8,5 @@ import java.util.List;
 @Mapper
 public interface campaignSearchMapper {
     int count(campaignSearchSearchRequestDTO request);
-    List<campaignSearchVO> selectList(campaignSearchSearchRequestDTO request);
+    List<CampaignSearchVO> selectList(campaignSearchSearchRequestDTO request);
 }

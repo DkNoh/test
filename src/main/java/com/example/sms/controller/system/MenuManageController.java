@@ -35,7 +35,7 @@ public class MenuManageController {
     // [Tree Prototype] 트리용 전체 데이터 조회
     @ResponseBody
     @GetMapping("/tree-data")
-    public ResponseEntity<ApiResponse<List<com.example.sms.dto.system.MenuTreeVO>>> getTreeData() {
+    public ResponseEntity<ApiResponse<List<com.example.sms.vo.system.MenuTreeVO>>> getTreeData() {
         return ResponseEntity.ok(ApiResponse.success(service.getMenuTree()));
     }
 

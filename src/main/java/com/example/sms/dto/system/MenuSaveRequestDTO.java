@@ -2,6 +2,7 @@ package com.example.sms.dto.system;
 
 import lombok.Data;
 import java.util.List;
+import com.example.sms.vo.system.MenuVO;
 
 @Data
 public class MenuSaveRequestDTO {
