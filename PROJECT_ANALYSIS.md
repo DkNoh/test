@@ -71,7 +71,11 @@ sms-project-v2/
 │       │   ├── mapper/                       # MyBatis 인터페이스
 │       │   ├── service/                      # 비즈니스 로직
 │       │   ├── util/                         # Excel, Masking, Security 유틸
-│       │   └── vo/                           # DB 조회 결과 VO
+│       │   └── vo/                           # DB 조회 결과 VO (도메인별 분리)
+│       │       ├── common/                   # 공통 VO (AttachFileVO 등)
+│       │       ├── contact/                  # 주소록 도메인 VO
+│       │       ├── sms/                      # SMS 도메인 VO
+│       │       └── system/                   # 시스템/부서/직원 도메인 VO
 │       └── resources/
 │           ├── application.yml              # 설정 (dev/prod 프로파일)
 │           ├── logback-spring.xml           # 로그 설정
@@ -274,3 +278,13 @@ spring.profiles.active: prod → JBoss JNDI DataSource + LDAP 인증
 3. **개인정보 감사 로그 비동기화**: `auditLogService.saveLog()` 를 `@Async`로 변경 시 응답속도 향상
 4. **파일 업로드 경로 외부화**: `app.upload.dir` 설정값을 환경변수로 분리
 5. **`.bak` 파일 정리**: `.java.bak`, `.xml.bak` 파일 제거하여 코드베이스 정돈
+
+---
+
+## 13. 주요 리팩토링 이력
+
+### 13-1. VO 패키지 도메인 분리 (2026-06-02)
+- **배경**: `dto` 패키지 하위와 `vo` 루트에 무작위로 흩어져 있던 VO 객체들을 체계적으로 관리할 필요성 대두.
+- **내용**: 도메인 주도 설계(DDD) 패턴에 맞게 `vo` 패키지 하위로 모든 VO 객체를 이동(`vo/sms`, `vo/system`, `vo/contact` 등).
+- **영향도**: 약 50여 개의 `Controller`, `Service`, `Mapper(XML)` 파일 내 `import` 구문 및 `resultType/parameterType` 경로 일괄 수정 완료.
+- **특이사항**: 네이밍 컨벤션에 어긋났던 `campaignSearchVO` 클래스명을 `CampaignSearchVO`로 교정함.

@@ -1,6 +1,6 @@
 package com.example.sms.mapper;
 
-import com.example.sms.vo.AttachFileVO;
+import com.example.sms.vo.common.AttachFileVO;
 import org.apache.ibatis.annotations.Mapper;
 
 @Mapper

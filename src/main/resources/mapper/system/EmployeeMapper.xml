@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.example.sms.mapper.EmployeeMapper">
 
-    <select id="findById" resultType="com.example.sms.vo.EmployeeVO">
+    <select id="findById" resultType="com.example.sms.vo.system.EmployeeVO">
         SELECT 
             e.EMP_ID, e.DEP_ID, d.DEP_NM, e.EMP_NM, e.EMP_LEV, e.REG_DTTM, e.MAX_SEND_CNT,
             e.PERM_CPN, e.PERM_SYS, e.PERM_STA, e.NOW_SEND_CNT, e.LAST_SEND_DT,
@@ -35,7 +35,7 @@
         </where>
     </sql>
 
-    <select id="selectEmployees" resultType="com.example.sms.vo.EmployeeVO">
+    <select id="selectEmployees" resultType="com.example.sms.vo.system.EmployeeVO">
         SELECT 
             e.EMP_ID, e.DEP_ID, d.DEP_NM, e.EMP_NM, e.EMP_LEV, e.REG_DTTM, e.MAX_SEND_CNT,
             e.PERM_CPN, e.PERM_SYS, e.PERM_STA, e.NOW_SEND_CNT, e.LAST_SEND_DT,

@@ -1,7 +1,7 @@
 package com.example.sms.mapper.sms;
 
 import com.example.sms.dto.sms.SmsHistorySearchRequestDTO;
-import com.example.sms.dto.sms.SmsHistoryVO;
+import com.example.sms.vo.sms.SmsHistoryVO;
 import org.apache.ibatis.annotations.Mapper;
 import java.util.List;
 

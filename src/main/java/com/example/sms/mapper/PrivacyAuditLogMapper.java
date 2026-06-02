@@ -1,6 +1,6 @@
 package com.example.sms.mapper;
 
-import com.example.sms.vo.PrivacyAuditLogVO;
+import com.example.sms.vo.system.PrivacyAuditLogVO;
 import org.apache.ibatis.annotations.Mapper;
 
 @Mapper

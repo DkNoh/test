@@ -1,7 +1,7 @@
 package com.example.sms.controller.common;
 
 import com.example.sms.service.common.FileService;
-import com.example.sms.vo.AttachFileVO;
+import com.example.sms.vo.common.AttachFileVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;

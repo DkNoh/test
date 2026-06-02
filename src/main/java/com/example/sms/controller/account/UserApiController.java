@@ -3,7 +3,7 @@ package com.example.sms.controller.account;
 import com.example.sms.dto.account.EmployeeSearchRequestDTO;
 import com.example.sms.dto.common.PageResponseDTO;
 import com.example.sms.service.system.EmployeeService;
-import com.example.sms.vo.EmployeeVO;
+import com.example.sms.vo.system.EmployeeVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;

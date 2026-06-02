@@ -3,7 +3,7 @@ package com.example.sms.controller.sms;
 import com.example.sms.dto.common.ApiResponse;
 import com.example.sms.dto.common.PageResponseDTO;
 import com.example.sms.dto.sms.SmsHistorySearchRequestDTO;
-import com.example.sms.dto.sms.SmsHistoryVO;
+import com.example.sms.vo.sms.SmsHistoryVO;
 import com.example.sms.service.sms.SmsHistoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

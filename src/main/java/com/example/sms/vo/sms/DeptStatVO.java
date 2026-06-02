@@ -1,4 +1,4 @@
-package com.example.sms.dto.sms;
+package com.example.sms.vo.sms;
 
 import lombok.Data;
 

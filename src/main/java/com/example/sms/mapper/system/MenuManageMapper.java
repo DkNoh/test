@@ -1,7 +1,7 @@
 package com.example.sms.mapper.system;
 
 import com.example.sms.dto.system.MenuSearchRequestDTO;
-import com.example.sms.dto.system.MenuVO;
+import com.example.sms.vo.system.MenuVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 

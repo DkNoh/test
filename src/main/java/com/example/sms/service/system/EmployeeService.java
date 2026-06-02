@@ -3,7 +3,7 @@ package com.example.sms.service.system;
 import com.example.sms.dto.account.EmployeeSearchRequestDTO;
 import com.example.sms.dto.common.PageResponseDTO;
 import com.example.sms.mapper.EmployeeMapper;
-import com.example.sms.vo.EmployeeVO;
+import com.example.sms.vo.system.EmployeeVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

@@ -19,7 +19,7 @@
         <include refid="searchConditions"/>
     </select>
 
-    <select id="selectList" resultType="com.example.sms.dto.contact.ContactGroupVO">
+    <select id="selectList" resultType="com.example.sms.vo.contact.ContactGroupVO">
         SELECT * FROM (
             SELECT A.*, ROWNUM AS RNUM FROM (
                 SELECT X.* FROM (

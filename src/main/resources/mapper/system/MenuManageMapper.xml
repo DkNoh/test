@@ -18,7 +18,7 @@
         <include refid="searchConditions"/>
     </select>
 
-    <select id="selectMenus" resultType="com.example.sms.dto.system.MenuVO">
+    <select id="selectMenus" resultType="com.example.sms.vo.system.MenuVO">
         SELECT * FROM (
             SELECT A.*, ROWNUM AS RNUM FROM (
                 SELECT 
@@ -40,7 +40,7 @@
         ) WHERE RNUM > #{offset}
     </select>
 
-    <select id="selectAllMenus" resultType="com.example.sms.dto.system.MenuVO">
+    <select id="selectAllMenus" resultType="com.example.sms.vo.system.MenuVO">
         SELECT 
             M.MENU_CD,
             M.MENU_NM,

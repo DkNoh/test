@@ -3,7 +3,7 @@ package com.example.sms.controller.contact;
 import com.example.sms.dto.common.ApiResponse;
 import com.example.sms.dto.common.PageResponseDTO;
 import com.example.sms.dto.contact.ContactGroupSearchRequestDTO;
-import com.example.sms.dto.contact.ContactGroupVO;
+import com.example.sms.vo.contact.ContactGroupVO;
 import com.example.sms.service.contact.ContactGroupService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

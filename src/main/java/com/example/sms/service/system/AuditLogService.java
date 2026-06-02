@@ -1,7 +1,7 @@
 package com.example.sms.service.system;
 
 import com.example.sms.mapper.PrivacyAuditLogMapper;
-import com.example.sms.vo.PrivacyAuditLogVO;
+import com.example.sms.vo.system.PrivacyAuditLogVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

@@ -2,7 +2,7 @@ package com.example.sms.service.history;
 
 import com.example.sms.dto.common.PageResponseDTO;
 import com.example.sms.dto.sms.HistoryTestSearchRequestDTO;
-import com.example.sms.dto.sms.HistoryTestVO;
+import com.example.sms.vo.sms.HistoryTestVO;
 import com.example.sms.mapper.sms.HistoryTestMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

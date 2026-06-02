@@ -3,7 +3,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.example.sms.mapper.PrivacyAuditLogMapper">
 
-    <insert id="insertAuditLog" parameterType="com.example.sms.vo.PrivacyAuditLogVO">
+    <insert id="insertAuditLog" parameterType="com.example.sms.vo.system.PrivacyAuditLogVO">
         INSERT INTO privacy_audit_log (
             executor_id,
             executor_ip,

@@ -2,7 +2,7 @@ package com.example.sms.aop;
 
 import com.example.sms.annotation.PrivacyLog;
 import com.example.sms.service.system.AuditLogService;
-import com.example.sms.vo.PrivacyAuditLogVO;
+import com.example.sms.vo.system.PrivacyAuditLogVO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;

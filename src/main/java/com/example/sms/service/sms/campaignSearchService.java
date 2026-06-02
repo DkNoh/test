@@ -2,7 +2,7 @@ package com.example.sms.service.sms;
 
 import com.example.sms.dto.common.PageResponseDTO;
 import com.example.sms.dto.sms.campaignSearchSearchRequestDTO;
-import com.example.sms.dto.sms.campaignSearchVO;
+import com.example.sms.vo.sms.CampaignSearchVO;
 import com.example.sms.mapper.sms.campaignSearchMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

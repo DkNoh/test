@@ -3,7 +3,7 @@ package com.example.sms.service.system;
 import com.example.sms.dto.common.PageResponseDTO;
 import com.example.sms.dto.system.MenuSaveRequestDTO;
 import com.example.sms.dto.system.MenuSearchRequestDTO;
-import com.example.sms.dto.system.MenuVO;
+import com.example.sms.vo.system.MenuVO;
 import com.example.sms.mapper.system.MenuManageMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

@@ -15,7 +15,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 
 import com.example.sms.mapper.EmployeeMapper;
-import com.example.sms.vo.EmployeeVO;
+import com.example.sms.vo.system.EmployeeVO;
 
 /**
  * [Spring] @Configuration: 이 클래스가 스프링 컨테이너의 설정(Config) 파일임을 나타냅니다. 클래스 내부에 @Bean이 붙은 메서드들이 반환하는 객체들을 스프링이 관리하는 '빈(Bean)'으로 등록합니다.

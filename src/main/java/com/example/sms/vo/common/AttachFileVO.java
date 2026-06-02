@@ -1,4 +1,4 @@
-package com.example.sms.vo;
+package com.example.sms.vo.common;
 
 import lombok.Builder;
 import lombok.Getter;

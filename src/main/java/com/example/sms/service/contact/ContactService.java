@@ -2,7 +2,7 @@ package com.example.sms.service.contact;
 
 import com.example.sms.dto.common.PageResponseDTO;
 import com.example.sms.dto.contact.ContactSearchRequestDTO;
-import com.example.sms.dto.contact.ContactVO;
+import com.example.sms.vo.contact.ContactVO;
 import com.example.sms.mapper.contact.ContactMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

@@ -30,7 +30,7 @@
         <include refid="searchConditions"/>
     </select>
 
-    <select id="selectList" resultType="com.example.sms.dto.sms.DeptStatVO">
+    <select id="selectList" resultType="com.example.sms.vo.sms.DeptStatVO">
         SELECT * FROM (
             SELECT A.*, ROWNUM AS RNUM FROM (
                 SELECT X.* FROM (

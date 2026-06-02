@@ -1,7 +1,7 @@
 package com.example.sms.mapper.contact;
 
 import com.example.sms.dto.contact.ContactGroupSearchRequestDTO;
-import com.example.sms.dto.contact.ContactGroupVO;
+import com.example.sms.vo.contact.ContactGroupVO;
 import org.apache.ibatis.annotations.Mapper;
 import java.util.List;
 import java.util.Map;

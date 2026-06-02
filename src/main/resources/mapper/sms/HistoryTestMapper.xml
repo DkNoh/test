@@ -25,7 +25,7 @@
         <include refid="searchConditions"/>
     </select>
 
-    <select id="selectList" resultType="com.example.sms.dto.sms.HistoryTestVO">
+    <select id="selectList" resultType="com.example.sms.vo.sms.HistoryTestVO">
         SELECT * FROM (
             SELECT A.*, ROWNUM AS RNUM FROM (
                 SELECT X.* FROM (

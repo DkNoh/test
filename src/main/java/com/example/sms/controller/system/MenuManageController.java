@@ -4,7 +4,7 @@ import com.example.sms.dto.common.ApiResponse;
 import com.example.sms.dto.common.PageResponseDTO;
 import com.example.sms.dto.system.MenuSaveRequestDTO;
 import com.example.sms.dto.system.MenuSearchRequestDTO;
-import com.example.sms.dto.system.MenuVO;
+import com.example.sms.vo.system.MenuVO;
 import com.example.sms.service.system.MenuManageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

@@ -13,7 +13,7 @@
         </where>
     </sql>
 
-    <select id="selectDepts" resultType="com.example.sms.vo.DeptVO">
+    <select id="selectDepts" resultType="com.example.sms.vo.system.DeptVO">
         SELECT 
             DEP_ID, DEP_NM, WRT_DTTM, DEL_DTTM, ACT_YN
         FROM SMS.DEP
@@ -28,7 +28,7 @@
         <include refid="deptSearchConditions"/>
     </select>
 
-    <select id="findById" resultType="com.example.sms.vo.DeptVO">
+    <select id="findById" resultType="com.example.sms.vo.system.DeptVO">
         SELECT DEP_ID, DEP_NM, WRT_DTTM, DEL_DTTM, ACT_YN
         FROM SMS.DEP
         WHERE DEP_ID = #{depId}
