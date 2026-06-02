@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.sms.mapper.ApprovalMapper">
+
+    <!-- 공통 검색 조건 -->
+    <sql id="searchWhere">
+        <where>
+            <if test="aprvStatus != null and aprvStatus != ''">
+                AND A.APRV_STATUS = #{aprvStatus}
+            </if>
+            <if test="reqUserId != null and reqUserId != ''">
+                AND A.REQ_USER_ID = #{reqUserId}
+            </if>
+            <if test="startDate != null and startDate != ''">
+                AND A.REQ_DT >= TO_DATE(#{startDate} || ' 00:00:00', 'YYYY-MM-DD HH24:MI:SS')
+            </if>
+            <if test="endDate != null and endDate != ''">
+                AND A.REQ_DT &lt;= TO_DATE(#{endDate} || ' 23:59:59', 'YYYY-MM-DD HH24:MI:SS')
+            </if>
+        </where>
+    </sql>
+
+    <!-- 1-1. 검색 조건에 따른 결재 목록 총 카운트 -->
+    <select id="selectApprovalListCount" parameterType="com.example.sms.dto.ApprovalSearchRequestDTO" resultType="long">
+        SELECT COUNT(1)
+        FROM TB_APPROVAL A
+        <include refid="searchWhere"/>
+    </select>
+
+    <!-- 1-2. 검색 조건에 따른 결재 목록 페이징 조회 -->
+    <!-- NOTE: 문자열 연결 없이 파라미터 바인딩만 사용, SELECT * 배제, 오라클 12c 페이징 -->
+    <select id="selectApprovalList" parameterType="com.example.sms.dto.ApprovalSearchRequestDTO" resultType="com.example.sms.dto.ApprovalDTO">
+        SELECT 
+            A.APRV_ID,
+            A.APRV_TYPE,
+            A.APRV_STATUS,
+            A.REF_TABLE,
+            A.REF_PK,
+            A.REQ_TITLE,
+            A.REQ_USER_ID,
+            A.REQ_DT,
+            A.APRV_USER_ID,
+            A.APRV_DT
+        FROM TB_APPROVAL A
+        <include refid="searchWhere"/>
+        ORDER BY A.REQ_DT DESC
+        OFFSET #{offset} ROWS FETCH NEXT #{size} ROWS ONLY
+    </select>
+
+    <!-- 2. 결재 상세 조회 -->
+    <select id="selectApprovalById" parameterType="string" resultType="com.example.sms.dto.ApprovalDTO">
+        SELECT 
+            APRV_ID,
+            APRV_TYPE,
+            APRV_STATUS,
+            REF_TABLE,
+            REF_PK,
+            REQ_TITLE,
+            REQ_USER_ID,
+            REQ_DT,
+            APRV_USER_ID,
+            APRV_DT
+        FROM TB_APPROVAL
+        WHERE APRV_ID = #{aprvId}
+    </select>
+
+    <!-- 3. 신규 결재 기안 -->
+    <insert id="insertApproval" parameterType="com.example.sms.dto.ApprovalDTO">
+        INSERT INTO TB_APPROVAL (
+            APRV_ID,
+            APRV_TYPE,
+            APRV_STATUS,
+            REF_TABLE,
+            REF_PK,
+            REQ_TITLE,
+            REQ_USER_ID,
+            REQ_DT
+        ) VALUES (
+            #{aprvId},
+            #{aprvType},
+            'PENDING', /* 초기상태 대기 */
+            #{refTable},
+            #{refPk},
+            #{reqTitle},
+            #{reqUserId},
+            SYSDATE
+        )
+    </insert>
+
+    <!-- 4. 승인/반려 상태 업데이트 -->
+    <update id="updateApprovalStatus" parameterType="com.example.sms.dto.ApprovalDTO">
+        UPDATE TB_APPROVAL
+        SET APRV_STATUS = #{aprvStatus},
+            APRV_USER_ID = #{aprvUserId},
+            APRV_DT = SYSDATE
+        WHERE APRV_ID = #{aprvId}
+    </update>
+
+</mapper>

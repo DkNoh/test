@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{defaultLayout}">
+<head>
+    <title>주소록 관리</title>
+</head>
+<body>
+<main layout:fragment="content">
+    
+    <!-- 타이틀 영역 -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h4 class="mb-0">주소록 그룹 <span class="text-muted fs-6 ms-2">(contact > group)</span></h4>
+        </div>
+    </div>
+
+    <!-- 검색 영역 (Card) -->
+    <div class="card mb-4 shadow-sm border-0">
+        <div class="card-body">
+            <div class="row align-items-center g-3">
+                <div class="col-auto">
+                    <label for="searchKeyword" class="col-form-label fw-bold">검색어</label>
+                </div>
+                <div class="col-md-4">
+                    <input type="text" id="searchKeyword" class="form-control" placeholder="검색어 입력">
+                </div>
+                <div class="col-auto ms-auto">
+                    <button type="button" class="btn btn-primary" id="btn-search">조회</button>
+                    <button type="button" class="btn btn-secondary ms-1" id="btn-reset">초기화</button>
+                    <button type="button" class="btn btn-success ms-1" id="btn-excel">대용량 엑셀 다운로드</button>
+                    <button type="button" class="btn btn-info text-white ms-1" id="btn-excel-grid">현재 화면 엑셀 다운로드</button>
+                </div>
+            </div>
+            <!-- 마스터-디테일 파라미터 전달용 히든 필드 -->
+            <input type="hidden" id="groupId" name="groupId" value="">
+        </div>
+    </div>
+
+    <!-- 메인 그리드 영역 (Split) -->
+    <div class="row g-4">
+        
+        <!-- Left: 주소록 그룹 -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                    <span class="fs-6">총 <strong class="text-primary" id="group-total-count">0</strong>건</span>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="text-muted" style="font-size: 0.85rem;">페이지당</span>
+                        <select id="pageSizeSelect" class="form-select form-select-sm" style="width: auto;">
+                            <option value="10">10건</option>
+                            <option value="20">20건</option>
+                            <option value="50">50건</option>
+                        </select>
+                        <button type="button" class="btn btn-success btn-sm" id="btn-create-group">+ 그룹 등록</button>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div id="grid-group" style="width: 100%;"></div>
+                </div>
+                <div class="card-footer bg-white border-0 pb-3">
+                    <div id="pagination-group" class="d-flex justify-content-center"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: 연락처 상세 -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                    <span class="fs-6">총 <strong class="text-primary" id="contact-total-count">0</strong>건</span>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="text-muted" style="font-size: 0.85rem;">페이지당</span>
+                        <select id="contactPageSizeSelect" class="form-select form-select-sm" style="width: auto;">
+                            <option value="10">10건</option>
+                            <option value="20">20건</option>
+                            <option value="50">50건</option>
+                        </select>
+                        <button type="button" class="btn btn-success btn-sm" id="btn-create-contact" style="display:none;">+ 연락처 추가</button>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div id="grid-contact" style="width: 100%;"></div>
+                </div>
+                <div class="card-footer bg-white border-0 pb-3">
+                    <div id="pagination-contact" class="d-flex justify-content-center"></div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</main>
+
+<th:block layout:fragment="script">
+    <script th:src="@{/js/contact/group-manage.js}"></script>
+    <script>
+        // CoreUI 렌더링 후 TUI 그리드 폭 보정을 위한 초기화
+        setTimeout(() => {
+            if (typeof grid !== 'undefined' && grid) grid.refreshLayout();
+            if (typeof contactGrid !== 'undefined' && contactGrid) contactGrid.refreshLayout();
+        }, 100);
+    </script>
+</th:block>
+</body>
+</html>

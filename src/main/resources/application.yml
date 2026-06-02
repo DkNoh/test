@@ -1,0 +1,52 @@
+spring:
+  profiles:
+    active: dev # 운영 환경 전개 시 prod로 변경
+
+thymeleaf:
+  prefix: classpath:/templates/
+  suffix: .html
+  cache: false
+
+mybatis:
+  mapper-locations: classpath:mapper/**/*.xml
+  type-aliases-package: com.example.sms.vo, com.example.sms.dto
+  configuration:
+    map-underscore-to-camel-case: true
+
+logging:
+  level:
+    com.example.sms: DEBUG
+    
+# 운영(prod) 환경에서 사용할 LDAP 설정 정보
+ldap:
+  url: ldap://your.ldap.server:389
+  base-dn: ou=users,dc=example,dc=com
+
+# 공통 파일 업로드 설정
+app:
+  upload:
+    dir: C:/Work/upload
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    url: jdbc:log4jdbc:oracle:thin:@localhost:1521/SMS
+    username: system
+    password: 1234
+    driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    # JBoss EAP JNDI Lookup (금융권 표준)
+    jndi-name: java:/comp/env/jdbc/SMS

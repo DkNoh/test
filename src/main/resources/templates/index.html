@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{defaultLayout}">
+<head>
+    <title>홈 - 대시보드</title>
+</head>
+<body>
+
+<main layout:fragment="content">
+    
+    <!-- 타이틀 영역 -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h4 class="mb-0 fw-bold">대시보드 <span class="text-muted fs-6 ms-2">(Dashboard)</span></h4>
+        </div>
+    </div>
+
+    <!-- 1. 최상단 KPI 카드 (핵심 성과 지표) -->
+    <div class="row g-4 mb-4">
+        
+        <!-- 당월 발송 건수 -->
+        <div class="col-sm-6 col-lg-3">
+            <div class="card shadow-sm border-0 h-100" style="background: linear-gradient(135deg, #007bff 0%, #0056b3 100%); color: white;">
+                <div class="card-body p-4 d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="fs-6 fw-medium mb-1 opacity-75">당월 전체 발송 건수</div>
+                        <div class="fs-2 fw-bold"><span id="kpi-total">0</span> <span class="fs-6 fw-normal opacity-75">건</span></div>
+                    </div>
+                    <!-- Bootstrap/CoreUI 기본 아이콘 대신 텍스트 심볼로 임시 대체 (폐쇄망 고려) -->
+                    <div class="fs-1 opacity-25">📊</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 발송 성공률 -->
+        <div class="col-sm-6 col-lg-3">
+            <div class="card shadow-sm border-0 h-100" style="background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%); color: white;">
+                <div class="card-body p-4 d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="fs-6 fw-medium mb-1 opacity-75">평균 발송 성공률</div>
+                        <div class="fs-2 fw-bold"><span id="kpi-success">0</span> <span class="fs-6 fw-normal opacity-75">%</span></div>
+                    </div>
+                    <div class="fs-1 opacity-25">✅</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 발송 실패 (위험) -->
+        <div class="col-sm-6 col-lg-3">
+            <div class="card shadow-sm border-0 h-100" style="background: linear-gradient(135deg, #dc3545 0%, #a71d2a 100%); color: white;">
+                <div class="card-body p-4 d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="fs-6 fw-medium mb-1 opacity-75">발송 실패 (당월)</div>
+                        <div class="fs-2 fw-bold"><span id="kpi-fail">0</span> <span class="fs-6 fw-normal opacity-75">건</span></div>
+                    </div>
+                    <div class="fs-1 opacity-25">⚠️</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 예상 비용 -->
+        <div class="col-sm-6 col-lg-3">
+            <div class="card shadow-sm border-0 h-100" style="background: linear-gradient(135deg, #343a40 0%, #1d2124 100%); color: white;">
+                <div class="card-body p-4 d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="fs-6 fw-medium mb-1 opacity-75">예상 발송 비용</div>
+                        <div class="fs-2 fw-bold"><span id="kpi-cost">0</span> <span class="fs-6 fw-normal opacity-75">원</span></div>
+                    </div>
+                    <div class="fs-1 opacity-25">💰</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. 중간 영역 (차트 및 통계) -->
+    <div class="row g-4 mb-4">
+        
+        <!-- 좌측: 주간 발송 추이 (가짜 Progress Bar 차트) -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white border-bottom-0 py-3 pb-0">
+                    <h6 class="mb-0 fw-bold">주간 요일별 발송량 통계</h6>
+                </div>
+                <div class="card-body" id="weekly-trend-container">
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="fw-medium text-muted">로딩중...</span>
+            </div>
+        </div>
+
+        <!-- 우측: 발송 매체 비율 -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white border-bottom-0 py-3 pb-0">
+                    <h6 class="mb-0 fw-bold">채널별 발송 비율</h6>
+                </div>
+                <div class="card-body" id="channel-ratio-container">
+                    
+                    <div class="mb-4 mt-2">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="fw-bold">로딩중...</span>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 3. 하단 미니 데이터 그리드 (최근 실패 로그) -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 fw-bold text-danger">최근 발송 실패 로그 (TOP 5)</h6>
+                    <button class="btn btn-sm btn-outline-secondary">이력 전체보기</button>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0 text-center align-middle">
+                            <thead class="table-light text-muted">
+                                <tr>
+                                    <th>발송 일시</th>
+                                    <th>발송 유형</th>
+                                    <th>수신번호</th>
+                                    <th>오류 코드</th>
+                                    <th>실패 사유 (상세)</th>
+                                    <th>재발송</th>
+                                </tr>
+                            </thead>
+                            <tbody id="fail-log-tbody">
+                                <tr>
+                                    <td colspan="6">로딩중...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<th:block layout:fragment="script">
+    <script th:src="@{/js/dashboard.js}"></script>
+</th:block>
+
+</body>
+</html>

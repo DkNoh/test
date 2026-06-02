@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.sms.mapper.AttachFileMapper">
+
+    <insert id="insertAttachFile" parameterType="com.example.sms.vo.AttachFileVO" useGeneratedKeys="true" keyProperty="fileId" keyColumn="file_id">
+        INSERT INTO attach_file (
+            original_name,
+            save_name,
+            file_path,
+            file_size,
+            ext
+        ) VALUES (
+            #{originalName},
+            #{saveName},
+            #{filePath},
+            #{fileSize},
+            #{ext}
+        )
+    </insert>
+
+    <select id="selectAttachFileById" parameterType="long" resultType="com.example.sms.vo.AttachFileVO">
+        SELECT file_id as fileId,
+               original_name as originalName,
+               save_name as saveName,
+               file_path as filePath,
+               file_size as fileSize,
+               ext,
+               created_at as createdAt
+        FROM attach_file
+        WHERE file_id = #{fileId}
+    </select>
+
+</mapper>

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.sms.mapper.sms.DeptStatMapper">
+
+    <sql id="searchConditions">
+        <where>
+        </where>
+    </sql>
+
+    <select id="count" resultType="int">
+        SELECT COUNT(1) FROM (
+            SELECT 
+                A.DEPT_ID,
+                B.DEPT_NM,
+                SUM(A.TOTAL_CNT) AS TOTAL_SEND_CNT,
+                SUM(A.SUCCESS_CNT) AS TOTAL_SUCCESS_CNT,
+                SUM(A.FAIL_CNT) AS TOTAL_FAIL_CNT
+            FROM TB_SMS_HISTORY A
+            JOIN TB_DEPT B ON A.DEPT_ID = B.DEPT_ID
+            WHERE 1=1
+            <if test="startDate != null and startDate != '' and endDate != null and endDate != ''">
+                  AND A.SEND_DT BETWEEN #{startDate} AND #{endDate}
+            </if>
+            <if test="deptNm != null and deptNm != ''">
+                  AND B.DEPT_NM LIKE '%' || #{deptNm} || '%'
+            </if>
+            GROUP BY A.DEPT_ID, B.DEPT_NM
+            ORDER BY TOTAL_SEND_CNT DESC
+        ) A
+        <include refid="searchConditions"/>
+    </select>
+
+    <select id="selectList" resultType="com.example.sms.dto.sms.DeptStatVO">
+        SELECT * FROM (
+            SELECT A.*, ROWNUM AS RNUM FROM (
+                SELECT X.* FROM (
+                    SELECT 
+                        A.DEPT_ID,
+                        B.DEPT_NM,
+                        SUM(A.TOTAL_CNT) AS TOTAL_SEND_CNT,
+                        SUM(A.SUCCESS_CNT) AS TOTAL_SUCCESS_CNT,
+                        SUM(A.FAIL_CNT) AS TOTAL_FAIL_CNT
+                    FROM TB_SMS_HISTORY A
+                    JOIN TB_DEPT B ON A.DEPT_ID = B.DEPT_ID
+                    WHERE 1=1
+                      AND A.SEND_DT BETWEEN #{startDate} AND #{endDate}
+                      AND B.DEPT_NM LIKE '%' || #{deptNm} || '%'
+                    GROUP BY A.DEPT_ID, B.DEPT_NM
+                    ORDER BY TOTAL_SEND_CNT DESC
+                ) X
+                <include refid="searchConditions"/>
+            ) A WHERE ROWNUM <![CDATA[<=]]> #{offset} + #{size}
+        ) WHERE RNUM > #{offset}
+    </select>
+
+    <insert id="insert">
+        INSERT INTO /* TODO: 테이블명 */ (REG_DT) VALUES (SYSDATE)
+    </insert>
+
+    <update id="update">
+        UPDATE /* TODO: 테이블명 */ SET MOD_DT = SYSDATE WHERE ID = #{id}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM /* TODO: 테이블명 */ WHERE ID = #{id}
+    </delete>
+
+    <select id="selectListForExcel" resultType="java.util.HashMap">
+        SELECT 
+            A.DEPT_ID,
+            B.DEPT_NM,
+            SUM(A.TOTAL_CNT) AS TOTAL_SEND_CNT,
+            SUM(A.SUCCESS_CNT) AS TOTAL_SUCCESS_CNT,
+            SUM(A.FAIL_CNT) AS TOTAL_FAIL_CNT
+        FROM TB_SMS_HISTORY A
+        JOIN TB_DEPT B ON A.DEPT_ID = B.DEPT_ID
+        WHERE 1=1
+          AND A.SEND_DT BETWEEN #{startDate} AND #{endDate}
+          AND B.DEPT_NM LIKE '%' || #{deptNm} || '%'
+        GROUP BY A.DEPT_ID, B.DEPT_NM
+        ORDER BY TOTAL_SEND_CNT DESC
+        <include refid="searchConditions"/>
+    </select>
+
+</mapper>

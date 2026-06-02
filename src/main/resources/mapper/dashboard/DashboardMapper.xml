@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.sms.mapper.DashboardMapper">
+
+    <!-- KPI 더미 데이터 (UNION DUAL 방식) -->
+    <select id="selectKpiSummary" resultType="com.example.sms.dto.dashboard.DashboardResponseDTO$KpiDTO">
+        SELECT 
+            1204500 AS totalSendCount,
+            98.5 AS successRate,
+            12400 AS failCount,
+            3500000 AS estimatedCost
+        FROM DUAL
+    </select>
+
+    <!-- 주간 요일별 더미 데이터 -->
+    <select id="selectWeeklyTrend" resultType="com.example.sms.dto.dashboard.DashboardResponseDTO$WeeklyTrendDTO">
+        SELECT '월요일' AS dayOfWeek, 240000 AS sendCount, 80 AS percentage FROM DUAL UNION ALL
+        SELECT '화요일' AS dayOfWeek, 180500 AS sendCount, 60 AS percentage FROM DUAL UNION ALL
+        SELECT '수요일' AS dayOfWeek, 310200 AS sendCount, 95 AS percentage FROM DUAL UNION ALL
+        SELECT '목요일' AS dayOfWeek, 150000 AS sendCount, 50 AS percentage FROM DUAL UNION ALL
+        SELECT '금요일' AS dayOfWeek, 290000 AS sendCount, 85 AS percentage FROM DUAL
+    </select>
+
+    <!-- 매체별 더미 데이터 -->
+    <select id="selectChannelRatio" resultType="com.example.sms.dto.dashboard.DashboardResponseDTO$ChannelRatioDTO">
+        SELECT '단문 (SMS)' AS channelName, 65.0 AS ratio, 'bg-primary' AS colorClass FROM DUAL UNION ALL
+        SELECT '장문 (LMS)' AS channelName, 20.5 AS ratio, 'bg-success' AS colorClass FROM DUAL UNION ALL
+        SELECT '알림톡' AS channelName, 10.0 AS ratio, 'bg-warning' AS colorClass FROM DUAL UNION ALL
+        SELECT 'MMS (이미지)' AS channelName, 4.5 AS ratio, 'bg-danger' AS colorClass FROM DUAL
+    </select>
+
+    <!-- 최근 실패 로그 더미 데이터 -->
+    <select id="selectRecentFailLogs" resultType="com.example.sms.dto.dashboard.DashboardResponseDTO$FailLogDTO">
+        SELECT '2026-06-01 13:42:11' AS failDate, 'SMS' AS sendType, '010-****-1234' AS receiverNo, 'ERR_001' AS errorCode, '결번 / 없는 번호 (통신사 반환)' AS failReason FROM DUAL UNION ALL
+        SELECT '2026-06-01 13:10:05' AS failDate, 'LMS' AS sendType, '010-****-5678' AS receiverNo, 'ERR_042' AS errorCode, '수신자 단말기 전원 꺼짐 (TimeOut)' AS failReason FROM DUAL UNION ALL
+        SELECT '2026-06-01 12:55:30' AS failDate, 'ALIMTALK' AS sendType, '010-****-9999' AS receiverNo, 'ERR_K01' AS errorCode, '카카오톡 채널 차단 고객' AS failReason FROM DUAL UNION ALL
+        SELECT '2026-06-01 11:20:44' AS failDate, 'SMS' AS sendType, '010-****-1111' AS receiverNo, 'ERR_003' AS errorCode, '통신사 스팸 필터링 차단' AS failReason FROM DUAL UNION ALL
+        SELECT '2026-06-01 09:05:12' AS failDate, 'MMS' AS sendType, '010-****-2222' AS receiverNo, 'ERR_099' AS errorCode, '첨부 이미지 용량 초과 (300KB 제한)' AS failReason FROM DUAL
+    </select>
+</mapper>

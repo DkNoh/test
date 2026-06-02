@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-ChildItem \"C:\\\\Work\\\\sms-project-v2\\\\src\\\\main\\\\java\\\\com\\\\example\" -Recurse | Where-Object { $_.PSIsContainer } | Select-Object FullName)"
+    ]
+  }
+}

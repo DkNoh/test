@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.sms.mapper.system.DeptMapper">
+
+    <sql id="deptSearchConditions">
+        <where>
+            <if test="depId != null and depId != ''">
+                AND DEP_ID LIKE '%' || #{depId} || '%'
+            </if>
+            <if test="depNm != null and depNm != ''">
+                AND DEP_NM LIKE '%' || #{depNm} || '%'
+            </if>
+        </where>
+    </sql>
+
+    <select id="selectDepts" resultType="com.example.sms.vo.DeptVO">
+        SELECT 
+            DEP_ID, DEP_NM, WRT_DTTM, DEL_DTTM, ACT_YN
+        FROM SMS.DEP
+        <include refid="deptSearchConditions"/>
+        ORDER BY WRT_DTTM DESC
+        OFFSET #{offset} ROWS FETCH NEXT #{size} ROWS ONLY
+    </select>
+
+    <select id="countDepts" resultType="int">
+        SELECT COUNT(*) 
+        FROM SMS.DEP
+        <include refid="deptSearchConditions"/>
+    </select>
+
+    <select id="findById" resultType="com.example.sms.vo.DeptVO">
+        SELECT DEP_ID, DEP_NM, WRT_DTTM, DEL_DTTM, ACT_YN
+        FROM SMS.DEP
+        WHERE DEP_ID = #{depId}
+    </select>
+
+    <insert id="insertDept">
+        INSERT INTO SMS.DEP (
+            DEP_ID, DEP_NM, ACT_YN, WRT_DTTM
+        ) VALUES (
+            #{depId}, #{depNm}, #{actYn}, TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+        )
+    </insert>
+
+    <update id="updateDept">
+        UPDATE SMS.DEP
+        SET DEP_NM = #{depNm},
+            ACT_YN = #{actYn}
+        WHERE DEP_ID = #{depId}
+    </update>
+
+</mapper>

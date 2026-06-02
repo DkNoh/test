@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <!-- 로그 패턴 정의 -->
+    <property name="CONSOLE_LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"/>
+    <property name="FILE_LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"/>
+    
+    <!-- 로그 파일 경로 및 이름 -->
+    <property name="LOG_PATH" value="logs"/>
+    <property name="LOG_FILE_NAME" value="sms-project"/>
+
+    <!-- 콘솔(Console) 출력 설정 -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <!-- 파일(File) 출력 설정 (Daily Rolling) -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/${LOG_FILE_NAME}.log</file>
+        <encoder>
+            <pattern>${FILE_LOG_PATTERN}</pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- 매일 자정에 새로운 로그 파일 생성 -->
+            <fileNamePattern>${LOG_PATH}/${LOG_FILE_NAME}-%d{yyyy-MM-dd}.log</fileNamePattern>
+            <!-- 30일이 지난 로그 파일은 자동 삭제 -->
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+    </appender>
+
+    <!-- MyBatis Log4jdbc 로깅 설정 -->
+    <!-- sqlonly: SQL문만을 로그로 남기며, PreparedStatement일 경우 관련된 argument 값으로 대체된 SQL문이 보여짐 -->
+    <logger name="jdbc.sqlonly" level="INFO" />
+    
+    <!-- sqltiming: SQL문과 해당 SQL을 실행시키는데 수행된 시간 정보(milliseconds)를 포함 -->
+    <logger name="jdbc.sqltiming" level="OFF" />
+    
+    <!-- audit: ResultSet을 제외한 모든 JDBC 호출 정보를 로그로 남김. 추적 목적. -->
+    <logger name="jdbc.audit" level="OFF" />
+    
+    <!-- resultset: ResultSet을 포함한 모든 JDBC 호출 정보를 로그로 남김 -->
+    <logger name="jdbc.resultset" level="OFF" />
+    
+    <!-- resultsettable: SQL 결과 조회된 데이터의 table을 그려줌 -->
+    <logger name="jdbc.resultsettable" level="OFF" />
+    
+    <!-- connection: DB 연결 및 종료와 관련된 로그 -->
+    <logger name="jdbc.connection" level="OFF" />
+
+    <!-- 애플리케이션 기본 패키지 로깅 -->
+    <logger name="com.example.sms" level="DEBUG" />
+
+    <!-- 기본 설정: 모든 로그는 콘솔과 파일에 INFO 레벨 이상만 출력 -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE" />
+        <appender-ref ref="FILE" />
+    </root>
+
+</configuration>

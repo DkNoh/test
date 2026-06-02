@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.sms.mapper.sms.SmsHistoryMapper">
+
+    <sql id="searchConditions">
+        <where>
+        </where>
+    </sql>
+
+    <select id="count" resultType="int">
+        SELECT COUNT(1) FROM (
+            SELECT 
+              A.MSG_ID,
+              A.SENDER_ID,
+              A.RECEIVER_PHONE,
+              A.MSG_TYPE,
+              A.SEND_STATUS,
+              A.SEND_DT
+            FROM TB_SMS_HISTORY A
+            WHERE 1=1
+            <if test="startDate != null and startDate != '' and endDate != null and endDate != ''">
+                  AND A.SEND_DT BETWEEN #{startDate} AND #{endDate}
+            </if>
+            <if test="receiverNo != null and receiverNo != ''">
+                  AND A.RECEIVER_PHONE LIKE '%' || #{receiverNo} || '%'
+            </if>
+            <if test="sendType != null and sendType != ''">
+                  AND A.MSG_TYPE = #{sendType}
+            </if>
+        ) A
+        <include refid="searchConditions"/>
+    </select>
+
+    <select id="selectList" resultType="com.example.sms.dto.sms.SmsHistoryVO">
+        SELECT * FROM (
+            SELECT A.*, ROWNUM AS RNUM FROM (
+                SELECT X.* FROM (
+                    SELECT 
+                      A.MSG_ID,
+                      A.SENDER_ID,
+                      A.RECEIVER_PHONE,
+                      A.MSG_TYPE,
+                      A.SEND_STATUS,
+                      A.SEND_DT
+                    FROM TB_SMS_HISTORY A
+                    WHERE 1=1
+                    <if test="startDate != null and startDate != '' and endDate != null and endDate != ''">
+                          AND A.SEND_DT BETWEEN #{startDate} AND #{endDate}
+                    </if>
+                    <if test="receiverNo != null and receiverNo != ''">
+                          AND A.RECEIVER_PHONE LIKE '%' || #{receiverNo} || '%'
+                    </if>
+                    <if test="sendType != null and sendType != ''">
+                          AND A.MSG_TYPE = #{sendType}
+                    </if>
+                ) X
+                <include refid="searchConditions"/>
+            ) A WHERE ROWNUM <![CDATA[<=]]> #{offset} + #{size}
+        ) WHERE RNUM > #{offset}
+    </select>
+
+    <insert id="insert">
+        INSERT INTO /* TODO: 테이블명 */ (REG_DT) VALUES (SYSDATE)
+    </insert>
+
+    <update id="update">
+        UPDATE /* TODO: 테이블명 */ SET MOD_DT = SYSDATE WHERE ID = #{id}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM /* TODO: 테이블명 */ WHERE ID = #{id}
+    </delete>
+
+</mapper>

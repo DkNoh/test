@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{defaultLayout}">
+<head>
+    <title>캠페인 관리</title>
+</head>
+<body>
+<main layout:fragment="content">
+    
+    <!-- 타이틀 영역 -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h4 class="mb-0 fw-bold">캠페인 관리 <span class="text-muted fs-6 ms-2">(sms > campaign)</span></h4>
+        </div>
+    </div>
+
+    <!-- 검색 조건 (Card) -->
+    <div class="card mb-4 shadow-sm border-0">
+        <div class="card-body">
+            <div class="row align-items-center g-3">
+                
+                <!-- 발송 유형 (SEND_TYPE) -->
+                <div class="col-auto">
+                    <label for="SEND_TYPE" class="col-form-label fw-bold">발송 유형</label>
+                </div>
+                <div class="col-md-3">
+                    <input type="text" id="SEND_TYPE" class="form-control" placeholder="SMS / LMS / ALIMTALK 등">
+                </div>
+
+                <!-- 액션 버튼 -->
+                <div class="col-auto ms-auto d-flex gap-2">
+                    <button type="button" class="btn btn-primary px-4" id="btn-search">조회</button>
+                    <button type="button" class="btn btn-secondary px-3" id="btn-reset">초기화</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 메인 데이터 그리드 (Card) -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center py-3 border-bottom-0">
+            <span class="fs-6 fw-medium">총 <strong class="text-primary" id="total-count">0</strong>건</span>
+            
+            <div class="d-flex align-items-center gap-3">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="text-muted" style="font-size: 0.85rem;">페이지당</span>
+                    <select id="pageSizeSelect" class="form-select form-select-sm" style="width: 80px;">
+                        <option value="10">10건</option>
+                        <option value="20">20건</option>
+                        <option value="50">50건</option>
+                    </select>
+                </div>
+                <button type="button" class="btn btn-success btn-sm px-3 shadow-none" id="btn-create">+ 신규 캠페인 등록</button>
+            </div>
+        </div>
+        
+        <div class="card-body p-0">
+            <!-- TUI Grid Placeholder -->
+            <div id="grid" style="width: 100%;"></div>
+        </div>
+        
+        <div class="card-footer bg-white border-0 py-3">
+            <!-- 페이지네이션 -->
+            <div id="pagination" class="d-flex justify-content-center"></div>
+        </div>
+    </div>
+
+</main>
+
+<th:block layout:fragment="script">
+    <script>
+        // TUI Grid 레이아웃 보정
+        setTimeout(() => {
+            if (typeof grid !== 'undefined' && grid) grid.refreshLayout();
+        }, 100);
+    </script>
+    <script th:src="@{/js/sms/campaign-manage.js}"></script>
+</th:block>
+</body>
+</html>

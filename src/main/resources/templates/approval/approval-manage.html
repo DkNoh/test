@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{defaultLayout}">
+
+<head>
+    <title>결재(승인) 관리</title>
+</head>
+
+<body>
+<main layout:fragment="content">
+    
+    <!-- 타이틀 영역 -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h4 class="mb-0 fw-bold">결재(승인) 관리 <span class="text-muted fs-6 ms-2">(approval > manage)</span></h4>
+        </div>
+    </div>
+
+    <!-- 검색 조건 (Card) -->
+    <div class="card mb-4 shadow-sm border-0">
+        <div class="card-body">
+            <div class="row align-items-center g-3">
+                
+                <!-- 기안일자 -->
+                <div class="col-auto">
+                    <label class="col-form-label fw-bold">기안일자</label>
+                </div>
+                <div class="col-auto d-flex align-items-center gap-2">
+                    <input type="date" id="startDate" class="form-control" style="width:140px">
+                    <span class="text-muted">~</span>
+                    <input type="date" id="endDate" class="form-control" style="width:140px">
+                </div>
+
+                <!-- 구분선 역할 (세로줄) -->
+                <div class="col-auto d-none d-md-block">
+                    <div style="height: 24px; width: 1px; background-color: #dee2e6; margin: 0 8px;"></div>
+                </div>
+
+                <!-- 결재상태 -->
+                <div class="col-auto">
+                    <label for="approvalStatus" class="col-form-label fw-bold">결재상태</label>
+                </div>
+                <div class="col-auto">
+                    <select id="approvalStatus" class="form-select" style="width:130px">
+                        <option value="">전체</option>
+                        <option value="PENDING" selected>결재대기</option>
+                        <option value="APPROVED">승인완료</option>
+                        <option value="REJECTED">반려</option>
+                    </select>
+                </div>
+
+                <!-- 구분선 역할 (세로줄) -->
+                <div class="col-auto d-none d-lg-block">
+                    <div style="height: 24px; width: 1px; background-color: #dee2e6; margin: 0 8px;"></div>
+                </div>
+
+                <!-- 기안자 -->
+                <div class="col-auto">
+                    <label for="drafterName" class="col-form-label fw-bold">기안자</label>
+                </div>
+                <div class="col-md-2">
+                    <input type="text" id="drafterName" class="form-control" placeholder="이름/사번">
+                </div>
+
+                <!-- 액션 버튼 -->
+                <div class="col-auto ms-auto d-flex gap-2">
+                    <button type="button" id="btn-search" class="btn btn-primary px-4">조회</button>
+                    <button type="button" id="btn-reset" class="btn btn-secondary px-3">초기화</button>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+
+    <!-- 메인 데이터 그리드 (Card) -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center py-3 border-bottom-0">
+            <span class="fs-6 fw-medium">총 <strong class="text-primary" id="total-count">0</strong>건</span>
+            
+            <div class="d-flex align-items-center gap-3">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="text-muted" style="font-size: 0.85rem;">페이지당</span>
+                    <select id="pageSizeSelect" class="form-select form-select-sm" style="width: 80px;">
+                        <option value="10">10건</option>
+                        <option value="20">20건</option>
+                        <option value="50">50건</option>
+                        <option value="100">100건</option>
+                    </select>
+                </div>
+                <!-- 일괄 처리 버튼 그룹 -->
+                <div class="btn-group">
+                    <button type="button" id="btn-approve" class="btn btn-primary btn-sm px-3 shadow-none">일괄 승인</button>
+                    <button type="button" id="btn-reject" class="btn btn-danger btn-sm px-3 shadow-none">일괄 반려</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card-body p-0">
+            <!-- TUI Grid Placeholder -->
+            <div id="grid" style="width: 100%;"></div>
+        </div>
+        
+        <div class="card-footer bg-white border-0 py-3">
+            <!-- 페이지네이션 -->
+            <div id="pagination" class="d-flex justify-content-center"></div>
+        </div>
+    </div>
+
+    <!-- 결재 상세 및 승인/반려 모달 (기존 커스텀 CSS 호환 유지 + 부트스트랩 클래스 혼용) -->
+    <div class="modal-overlay" id="detailModal" onclick="CommonUtils.closeModalOnOverlay(event)">
+        <div class="modal-box card border-0 shadow-lg" style="width: 500px; border-radius: 12px;">
+            <div class="modal-header bg-light border-bottom px-4 py-3">
+                <h5 class="mb-0 fw-bold">결재 상세 정보</h5>
+                <button class="btn-close" onclick="CommonUtils.closeModal()"></button>
+            </div>
+            <div class="modal-body px-4 py-4">
+                <input type="hidden" id="d-aprvId">
+                <table class="table table-borderless table-sm mb-0">
+                    <tbody>
+                        <tr><th class="text-muted fw-normal" style="width: 100px;">결재 ID</th><td class="fw-medium" id="d-aprvId-text"></td></tr>
+                        <tr><th class="text-muted fw-normal">결재유형</th><td id="d-aprvType"></td></tr>
+                        <tr><th class="text-muted fw-normal">결재상태</th><td id="d-aprvStatus"></td></tr>
+                        <tr><th class="text-muted fw-normal">기안자</th><td id="d-reqUserId"></td></tr>
+                        <tr><th class="text-muted fw-normal">기안일시</th><td id="d-reqDt"></td></tr>
+                        <tr><th class="text-muted fw-normal">결재제목</th><td id="d-reqTitle"></td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer bg-light border-top px-4 py-3 gap-2">
+                <button type="button" class="btn btn-primary px-4" id="btn-single-approve" style="display:none;">승인</button>
+                <button type="button" class="btn btn-danger px-4" id="btn-single-reject" style="display:none;">반려</button>
+                <button type="button" class="btn btn-secondary px-4" onclick="CommonUtils.closeModal()">닫기</button>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<th:block layout:fragment="script">
+    <script th:inline="javascript">
+        // 결재 API 엔드포인트 세팅
+        const SERVER_DATA = {
+            apiUrl: '/approval/data'
+        };
+        
+        // 레이아웃 렌더링 후 그리드 크기 보정
+        setTimeout(() => {
+            if (typeof grid !== 'undefined' && grid) grid.refreshLayout();
+        }, 100);
+    </script>
+    <script th:src="@{/js/approval/approval-manage.js}"></script>
+</th:block>
+
+</body>
+</html>

@@ -1,0 +1,16 @@
+package com.example.sms.mapper.sms;
+
+import com.example.sms.dto.sms.SmsHistorySearchRequestDTO;
+import com.example.sms.dto.sms.SmsHistoryVO;
+import org.apache.ibatis.annotations.Mapper;
+import java.util.List;
+
+@Mapper
+public interface SmsHistoryMapper {
+    int count(SmsHistorySearchRequestDTO request);
+    List<SmsHistoryVO> selectList(SmsHistorySearchRequestDTO request);
+
+    int insert(SmsHistoryVO vo);
+    int update(SmsHistoryVO vo);
+    int delete(String id);
+}

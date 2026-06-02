@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{defaultLayout}">
+
+<head>
+    <title>권한 관리</title>
+</head>
+
+<body>
+<main layout:fragment="content">
+    
+    <!-- 타이틀 영역 -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h4 class="mb-0 fw-bold">권한 관리 <span class="text-muted fs-6 ms-2">(authority > manage)</span></h4>
+        </div>
+    </div>
+
+    <!-- 검색 조건 (Card) -->
+    <div class="card mb-4 shadow-sm border-0">
+        <div class="card-body">
+            <div class="row align-items-center g-3">
+                
+                <!-- 권한코드 -->
+                <div class="col-auto">
+                    <label for="authCode" class="col-form-label fw-bold">권한코드</label>
+                </div>
+                <div class="col-md-3">
+                    <input type="text" id="authCode" class="form-control" placeholder="예: ROLE_ADMIN">
+                </div>
+
+                <div class="col-auto d-none d-lg-block">
+                    <div style="height: 24px; width: 1px; background-color: #dee2e6; margin: 0 8px;"></div>
+                </div>
+
+                <!-- 권한명 -->
+                <div class="col-auto">
+                    <label for="authName" class="col-form-label fw-bold">권한명</label>
+                </div>
+                <div class="col-md-3">
+                    <input type="text" id="authName" class="form-control" placeholder="예: 관리자">
+                </div>
+
+                <!-- 액션 버튼 -->
+                <div class="col-auto ms-auto d-flex gap-2">
+                    <button type="button" id="btn-search" class="btn btn-primary px-4">조회</button>
+                    <button type="button" id="btn-reset" class="btn btn-secondary px-3">초기화</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 메인 데이터 그리드 (Card) -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center py-3 border-bottom-0">
+            <span class="fs-6 fw-medium">총 <strong class="text-primary" id="total-count">0</strong>건</span>
+            
+            <div class="d-flex align-items-center gap-3">
+                <!-- 선택 삭제 및 권한 등록 버튼 -->
+                <div class="d-flex gap-2">
+                    <button type="button" id="btn-delete" class="btn btn-danger btn-sm px-3 shadow-none">선택 삭제</button>
+                    <button type="button" id="btn-create" class="btn btn-primary btn-sm px-3 shadow-none">권한 등록</button>
+                </div>
+                <div class="d-flex align-items-center gap-2 border-start ps-3">
+                    <span class="text-muted" style="font-size: 0.85rem;">페이지당</span>
+                    <select id="pageSizeSelect" class="form-select form-select-sm" style="width: 80px;">
+                        <option value="10">10건</option>
+                        <option value="20">20건</option>
+                        <option value="50">50건</option>
+                        <option value="100">100건</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card-body p-0">
+            <!-- TUI Grid Placeholder -->
+            <div id="grid" style="width: 100%;"></div>
+        </div>
+        
+        <div class="card-footer bg-white border-0 py-3">
+            <!-- 페이지네이션 -->
+            <div id="pagination" class="d-flex justify-content-center"></div>
+        </div>
+    </div>
+
+</main>
+
+<th:block layout:fragment="script">
+    <script th:inline="javascript">
+        // 권한 API 엔드포인트 세팅
+        const SERVER_DATA = {
+            apiUrl: '/authority/manage/data',
+            createUrl: '/authority/manage/create',
+            deleteUrl: '/authority/manage/delete'
+        };
+        
+        // 레이아웃 렌더링 후 그리드 보정
+        setTimeout(() => {
+            if (typeof grid !== 'undefined' && grid) grid.refreshLayout();
+        }, 100);
+    </script>
+    <script th:src="@{/js/authority/authority-manage.js}"></script>
+</th:block>
+
+</body>
+</html>

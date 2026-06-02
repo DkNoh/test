@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.sms.mapper.system.MenuManageMapper">
+
+    <sql id="searchConditions">
+        <where>
+            <if test="searchKeyword != null and searchKeyword != ''">
+                AND (MENU_CD LIKE '%' || #{searchKeyword} || '%' OR MENU_NM LIKE '%' || #{searchKeyword} || '%')
+            </if>
+            <if test="useYn != null and useYn != ''">
+                AND USE_YN = #{useYn}
+            </if>
+        </where>
+    </sql>
+
+    <select id="countMenus" resultType="int">
+        SELECT COUNT(1) FROM TB_MENU
+        <include refid="searchConditions"/>
+    </select>
+
+    <select id="selectMenus" resultType="com.example.sms.dto.system.MenuVO">
+        SELECT * FROM (
+            SELECT A.*, ROWNUM AS RNUM FROM (
+                SELECT 
+                    M.MENU_CD,
+                    M.MENU_NM,
+                    M.MENU_URL,
+                    M.UP_MENU_CD,
+                    M.SORT_ORD,
+                    M.USE_YN,
+                    (
+                        SELECT LISTAGG(AUTH_CD, ', ') WITHIN GROUP (ORDER BY AUTH_CD)
+                        FROM TB_MENU_AUTH
+                        WHERE MENU_CD = M.MENU_CD
+                    ) AS authNames
+                FROM TB_MENU M
+                <include refid="searchConditions"/>
+                ORDER BY M.UP_MENU_CD ASC, M.SORT_ORD ASC, M.MENU_CD ASC
+            ) A WHERE ROWNUM <![CDATA[<=]]> #{offset} + #{size}
+        ) WHERE RNUM > #{offset}
+    </select>
+
+    <select id="selectAllMenus" resultType="com.example.sms.dto.system.MenuVO">
+        SELECT 
+            M.MENU_CD,
+            M.MENU_NM,
+            M.MENU_URL,
+            M.UP_MENU_CD,
+            M.SORT_ORD,
+            M.USE_YN,
+            (
+                SELECT LISTAGG(AUTH_CD, ', ') WITHIN GROUP (ORDER BY AUTH_CD)
+                FROM TB_MENU_AUTH
+                WHERE MENU_CD = M.MENU_CD
+            ) AS authNames
+        FROM TB_MENU M
+        ORDER BY M.UP_MENU_CD ASC, M.SORT_ORD ASC, M.MENU_CD ASC
+    </select>
+
+    <select id="selectMenuAuths" resultType="string">
+        SELECT AUTH_CD 
+        FROM TB_MENU_AUTH 
+        WHERE MENU_CD = #{menuCd}
+    </select>
+
+    <insert id="insertMenu">
+        INSERT INTO TB_MENU (MENU_CD, MENU_NM, MENU_URL, UP_MENU_CD, SORT_ORD, REG_ID, USE_YN)
+        VALUES (#{menuCd}, #{menuNm}, #{menuUrl}, #{upMenuCd}, #{sortOrd}, #{regId}, #{useYn})
+    </insert>
+
+    <update id="updateMenu">
+        UPDATE TB_MENU
+        SET MENU_NM = #{menuNm},
+            MENU_URL = #{menuUrl},
+            UP_MENU_CD = #{upMenuCd},
+            SORT_ORD = #{sortOrd},
+            USE_YN = #{useYn}
+        WHERE MENU_CD = #{menuCd}
+    </update>
+
+    <update id="shiftSortOrder">
+        UPDATE TB_MENU
+        SET SORT_ORD = SORT_ORD + 1
+        WHERE SORT_ORD <![CDATA[>=]]> #{sortOrd}
+          <if test="excludeMenuCd != null and excludeMenuCd != ''">
+              AND MENU_CD != #{excludeMenuCd}
+          </if>
+          <choose>
+              <when test="upMenuCd != null and upMenuCd != ''">
+                  AND UP_MENU_CD = #{upMenuCd}
+              </when>
+              <otherwise>
+                  AND (UP_MENU_CD IS NULL OR UP_MENU_CD = '')
+              </otherwise>
+          </choose>
+    </update>
+
+    <delete id="deleteMenu">
+        DELETE FROM TB_MENU
+        WHERE MENU_CD = #{menuCd}
+    </delete>
+
+    <insert id="insertMenuAuth">
+        INSERT INTO TB_MENU_AUTH (MENU_CD, AUTH_CD, REG_ID)
+        VALUES (#{menuCd}, #{authCd}, #{regId})
+    </insert>
+
+    <delete id="deleteMenuAuths">
+        DELETE FROM TB_MENU_AUTH
+        WHERE MENU_CD = #{menuCd}
+    </delete>
+
+</mapper>

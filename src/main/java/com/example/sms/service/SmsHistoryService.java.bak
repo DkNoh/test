@@ -1,0 +1,35 @@
+package com.example.sms.service;
+
+import com.example.sms.dto.common.PageResponseDTO;
+import com.example.sms.dto.sms.SmsHistorySearchRequestDTO;
+import com.example.sms.dto.sms.SmsHistoryVO;
+import com.example.sms.mapper.sms.SmsHistoryMapper;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class SmsHistoryService {
+
+    private final SmsHistoryMapper mapper;
+
+    @Transactional(readOnly = true)
+    public PageResponseDTO<SmsHistoryVO> search(SmsHistorySearchRequestDTO request) {
+        int totalCount = mapper.count(request);
+        List<SmsHistoryVO> list = mapper.selectList(request);
+        return PageResponseDTO.of(list, request, totalCount);
+    }
+
+    @Transactional
+    public void save(SmsHistoryVO vo) {
+        // TODO: 신규/수정 분기 로직 구현
+        mapper.insert(vo);
+    }
+
+    @Transactional
+    public void delete(String id) {
+        mapper.delete(id);
+    }
+}

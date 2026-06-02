@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.sms.mapper.AuthorityMapper">
+
+    <!-- 공통 검색 조건 -->
+    <sql id="searchWhere">
+        <where>
+            <if test="authCode != null and authCode != ''">
+                AND AUTH_CD LIKE '%' || #{authCode} || '%'
+            </if>
+            <if test="authName != null and authName != ''">
+                AND AUTH_NM LIKE '%' || #{authName} || '%'
+            </if>
+        </where>
+    </sql>
+
+    <!-- 1-1. 검색 조건에 따른 권한 목록 총 카운트 -->
+    <select id="selectAuthorityListCount" parameterType="com.example.sms.dto.AuthoritySearchRequestDTO" resultType="long">
+        SELECT COUNT(1)
+        FROM TB_AUTHORITY
+        <include refid="searchWhere"/>
+    </select>
+
+    <!-- 1-2. 검색 조건에 따른 권한 목록 페이징 조회 -->
+    <!-- NOTE: 오라클 12c 페이징 구문 적용 -->
+    <select id="selectAuthorityList" parameterType="com.example.sms.dto.AuthoritySearchRequestDTO" resultType="com.example.sms.dto.AuthorityDTO">
+        SELECT 
+            AUTH_CD,
+            AUTH_NM,
+            USE_YN,
+            REG_ID,
+            REG_DT,
+            UPD_ID,
+            UPD_DT
+        FROM TB_AUTHORITY
+        <include refid="searchWhere"/>
+        ORDER BY AUTH_CD ASC
+        OFFSET #{offset} ROWS FETCH NEXT #{size} ROWS ONLY
+    </select>
+
+    <insert id="insertAuthority" parameterType="com.example.sms.dto.AuthorityDTO">
+        INSERT INTO TB_AUTHORITY (
+            AUTH_CD,
+            AUTH_NM,
+            USE_YN,
+            REG_ID,
+            REG_DT
+        ) VALUES (
+            #{authCd},
+            #{authNm},
+            NVL(#{useYn}, 'Y'),
+            #{regId},
+            SYSDATE
+        )
+    </insert>
+
+    <delete id="deleteAuthority" parameterType="string">
+        DELETE FROM TB_AUTHORITY
+        WHERE AUTH_CD = #{authCd}
+    </delete>
+
+</mapper>
