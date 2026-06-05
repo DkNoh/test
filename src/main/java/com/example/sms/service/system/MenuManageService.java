@@ -3,6 +3,8 @@ package com.example.sms.service.system;
 import com.example.sms.dto.common.PageResponseDTO;
 import com.example.sms.dto.system.MenuSaveRequestDTO;
 import com.example.sms.dto.system.MenuSearchRequestDTO;
+import com.example.sms.exception.CustomException;
+import com.example.sms.exception.ErrorCode;
 import com.example.sms.vo.system.MenuVO;
 import com.example.sms.mapper.system.MenuManageMapper;
 import lombok.RequiredArgsConstructor;
@@ -67,13 +69,14 @@ public class MenuManageService {
 
 
     @Transactional(readOnly = true)
-    public List<String> getMenuAuths(String menuCd) {
+    public List<MenuSaveRequestDTO.MenuAuthPermissionDTO> getMenuAuths(String menuCd) {
         return menuManageMapper.selectMenuAuths(menuCd);
     }
 
     @Transactional
     public void saveMenu(MenuSaveRequestDTO request, String loginUserId) {
         MenuVO menu = request.getMenu();
+        validateUniqueMenuUrl(menu);
         
         // 정렬 순서 밀어내기 (동일한 부모, 현재 입력한 정렬 순서보다 크거나 같은 것들 + 1)
         menuManageMapper.shiftSortOrder(menu.getUpMenuCd(), menu.getSortOrd(), menu.getMenuCd());
@@ -87,11 +90,60 @@ public class MenuManageService {
 
         // 권한 정보 갱신 (기존 권한 날리고 새로 Insert)
         menuManageMapper.deleteMenuAuths(menu.getMenuCd());
-        if (request.getAuthRoles() != null) {
-            for (String role : request.getAuthRoles()) {
-                menuManageMapper.insertMenuAuth(menu.getMenuCd(), role, loginUserId);
+        List<MenuSaveRequestDTO.MenuAuthPermissionDTO> authPermissions = request.getAuthPermissions();
+        if (authPermissions == null || authPermissions.isEmpty()) {
+            authPermissions = toDefaultPermissions(request.getAuthRoles());
+        }
+        if (authPermissions != null) {
+            for (MenuSaveRequestDTO.MenuAuthPermissionDTO auth : authPermissions) {
+                if (auth.getAuthCd() != null && !auth.getAuthCd().isBlank()) {
+                    normalizeAuthPermission(auth);
+                    menuManageMapper.insertMenuAuth(menu.getMenuCd(), auth, loginUserId);
+                }
             }
         }
+    }
+
+    private void validateUniqueMenuUrl(MenuVO menu) {
+        if (menu.getMenuUrl() == null || menu.getMenuUrl().isBlank()) {
+            return;
+        }
+
+        int count = menuManageMapper.countMenusByUrlExcludeCd(menu.getMenuUrl(), menu.getMenuCd());
+        if (count > 0) {
+            throw new CustomException(ErrorCode.DUPLICATE_MENU_URL);
+        }
+    }
+
+    private List<MenuSaveRequestDTO.MenuAuthPermissionDTO> toDefaultPermissions(List<String> roles) {
+        if (roles == null) {
+            return java.util.Collections.emptyList();
+        }
+        return roles.stream()
+                .map(role -> {
+                    MenuSaveRequestDTO.MenuAuthPermissionDTO auth = new MenuSaveRequestDTO.MenuAuthPermissionDTO();
+                    auth.setAuthCd(role);
+                    auth.setCanRead("Y");
+                    auth.setCanWrite("ROLE_ADMIN".equals(role) ? "Y" : "N");
+                    auth.setCanApprove("ROLE_ADMIN".equals(role) ? "Y" : "N");
+                    auth.setCanExcel("ROLE_ADMIN".equals(role) ? "Y" : "N");
+                    return auth;
+                })
+                .toList();
+    }
+
+    private void normalizeAuthPermission(MenuSaveRequestDTO.MenuAuthPermissionDTO auth) {
+        auth.setCanRead(toYn(auth.getCanRead(), "Y"));
+        auth.setCanWrite(toYn(auth.getCanWrite(), "N"));
+        auth.setCanApprove(toYn(auth.getCanApprove(), "N"));
+        auth.setCanExcel(toYn(auth.getCanExcel(), "N"));
+    }
+
+    private String toYn(String value, String defaultValue) {
+        if (value == null || value.isBlank()) {
+            return defaultValue;
+        }
+        return "Y".equalsIgnoreCase(value) ? "Y" : "N";
     }
 
     @Transactional

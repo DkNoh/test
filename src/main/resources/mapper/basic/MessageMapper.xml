@@ -11,7 +11,7 @@
     <select id="count" resultType="int">
         SELECT COUNT(1)
         FROM TB_MESSAGE m
-        /* TODO: LEFT JOIN TB_DEPT d ON m.DEPT_ID = d.DEPT_ID */
+        LEFT JOIN TB_DEPT d ON m.DEPT_ID = d.DEPT_ID
     </select>
 
     <select id="selectList" resultType="com.example.sms.vo.basic.MessageVO">
@@ -24,7 +24,7 @@
             m.SEND_POINT AS sendPoint,
             m.MSG_CONTENT AS msgContent
         FROM TB_MESSAGE m
-        /* TODO: LEFT JOIN TB_DEPT d ON m.DEPT_ID = d.DEPT_ID */
+        LEFT JOIN TB_DEPT d ON m.DEPT_ID = d.DEPT_ID
         ORDER BY m.REG_DT DESC, m.MSG_ID DESC
         OFFSET #{offset} ROWS FETCH NEXT #{size} ROWS ONLY
     </select>

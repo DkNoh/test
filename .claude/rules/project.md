@@ -49,3 +49,11 @@
   1. `docs/api-mapping.md`: 신규 기능의 [소메뉴, 상태, URL, Controller, Template] 항목을 표에 추가.
   2. `docs/menu-structure.md`: 신규/수정된 화면의 [조회조건(Search Inputs), 데이터 필드(Grid Columns)]를 기존 양식 표에 추가.
 - 위 두 파일의 갱신 내용이 PR/작업 내역에 포함되지 않으면 해당 작업은 "완료"가 아닌 "부분 완료"로 간주한다.
+
+## 레거시 마이그레이션 상태 구분
+- `docs/menu-structure.md`의 조회조건과 그리드 필드는 폐쇄망 레거시 화면을 눈으로 관찰해 작성한 화면 명세다.
+- 현재 DB 스키마, VO/DTO 필드명, Mapper SQL은 실제 운영 DB와 1:1 보장되지 않는다.
+- AI가 생성한 필드명은 임시 naming으로 간주한다.
+- 실제 DB 컬럼명/레거시 쿼리/업무 규칙이 확인되면 문서, schema, VO/DTO, Mapper XML, Service, JS를 함께 동기화한다.
+- 실제 DB 근거 없이 필드명을 “확정”이라고 표현하지 않는다.
+- 불확실한 필드는 TODO 또는 추정 표시를 남기고, 임의로 하드코딩하지 않는다.

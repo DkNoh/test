@@ -11,4 +11,14 @@ public class MenuSaveRequestDTO {
     
     private MenuVO menu;
     private List<String> authRoles; // 예: ["ROLE_ADMIN", "ROLE_USER"]
+    private List<MenuAuthPermissionDTO> authPermissions;
+
+    @Data
+    public static class MenuAuthPermissionDTO {
+        private String authCd;
+        private String canRead;
+        private String canWrite;
+        private String canApprove;
+        private String canExcel;
+    }
 }

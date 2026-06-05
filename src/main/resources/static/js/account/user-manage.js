@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const pageBuilder = new TuiPageBuilder({
         el: 'grid',
-        apiUrl: '/api/user/search',
+        apiUrl: '/account/user-manage/search',
         searchInputs: ['empId', 'empName', 'deptId'],
         rowHeaders: ['rowNum'],
         columns: [
@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         CommonUtils.confirm(`[${empName}] 계정을 생성하시겠습니까?`, async () => {
             try {
-                await axios.post('/api/user/create', data);
+                await axios.post('/account/user-manage/create', data);
                 CommonUtils.toast('계정이 성공적으로 생성되었습니다.', 'success');
                 document.querySelector('#createModal').style.display = 'none';
                 pageBuilder.searchData(1);

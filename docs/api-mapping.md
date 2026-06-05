@@ -80,7 +80,7 @@
 
 | # | 소메뉴 | 상태 | URL (현재/제안) | Controller | Template |
 |---|--------|------|----------------|------------|----------|
-| 5-1 | 사용자관리 | ✅ | `/account/user-manage` | `AccountController` + `UserApiController` | `account/user-manage.html` |
+| 5-1 | 사용자관리 | ✅ | `/account/user-manage` | `UserManageController` | `account/user-manage.html` |
 
 ---
 
@@ -89,6 +89,7 @@
 | # | 소메뉴 | 상태 | URL (현재/제안) | Controller | Template |
 |---|--------|------|----------------|------------|----------|
 | 6-1 | 마케팅 철회 통계 | ✅ | `/statistics/marketing-optout` | `StatisticsController` | `statistics/marketing-optout.html` |
+| 6-2 | 부서별 발송 통계 | ✅ | `/statistics/dept-send-stat` | `DeptSendStatController` | `statistics/dept-send-stat.html` |
 
 ---
 
@@ -101,7 +102,7 @@
 | 권한 관리 | `/authority/manage` | `AuthorityController` | `authority/authority-manage.html` | 완료 |
 | 메뉴 관리 | `/system/menu-manage` | `MenuManageController` | `system/menu-manage.html` | 완료 |
 | 대시보드 | `/` | `IndexController` | `index.html` | 완료 |
-| 스캐폴드 생성기 | `/system/scaffold` | `SystemScaffoldController` | `system/scaffold.html` | dev 전용 |
+| 스캐폴드 생성기 | `/system/scaffold` | `SystemScaffoldController` | `system/scaffold.html` | local 전용 |
 
 ---
 

@@ -3,6 +3,7 @@ target/
 pom.xml.tag
 pom.xml.releaseBackup
 pom.xml.versionsBackup
+*.class
 
 # IDE (Eclipse/STS, IntelliJ, VSCode)
 .settings/
@@ -16,3 +17,8 @@ pom.xml.versionsBackup
 # OS generated files
 .DS_Store
 Thumbs.db
+
+# Runtime / local scratch
+logs/
+scratch/
+CLAUDE.local.md

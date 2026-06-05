@@ -58,6 +58,10 @@ public class MenuService {
      * @return 권한 유무 (true/false)
      */
     public boolean hasAccess(String menuUrl, String authCd) {
-        return menuMapper.countAuthForUrl(menuUrl, authCd) > 0;
+        return hasAccess(menuUrl, authCd, "READ");
+    }
+
+    public boolean hasAccess(String menuUrl, String authCd, String action) {
+        return menuMapper.countAuthForUrl(menuUrl, authCd, action) > 0;
     }
 }

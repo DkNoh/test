@@ -29,5 +29,7 @@ public interface MenuMapper {
      * @param authCd 사용자의 권한코드
      * @return 접근 가능한 매핑 데이터 건수 (0이면 접근 불가, 1이상이면 접근 허용)
      */
-    int countAuthForUrl(@Param("menuUrl") String menuUrl, @Param("authCd") String authCd);
+    int countAuthForUrl(@Param("menuUrl") String menuUrl,
+                        @Param("authCd") String authCd,
+                        @Param("action") String action);
 }

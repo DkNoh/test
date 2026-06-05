@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function fetchDashboardData() {
         setRefreshing(true);
-        axios.get('/api/dashboard/summary')
+        axios.get('/dashboard/summary')
             .then(res => {
                 const data = res.data;
                 renderKpi(data.kpi);

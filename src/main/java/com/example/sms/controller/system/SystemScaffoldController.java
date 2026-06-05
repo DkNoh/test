@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
-@Profile("dev")
+@Profile("local")
 @Controller
 @RequestMapping("/system/scaffold")
 @RequiredArgsConstructor
@@ -81,6 +81,10 @@ public class SystemScaffoldController {
                 getJsTemplate(moduleName, domainId, domainName, cols, searchVars, includeExcel, includeExcelGrid));
             results.put("메뉴등록.sql",
                 getMenuSqlTemplate(moduleName, domainId, domainClass, domainName));
+            results.put("docs-api-mapping.md snippet",
+                getApiMappingDocSnippet(moduleName, domainId, domainClass, domainName));
+            results.put("docs-menu-structure.md snippet",
+                getMenuStructureDocSnippet(domainName, searchVars, cols));
 
             return ResponseEntity.ok(ApiResponse.success(results));
         } catch (Exception e) {
@@ -367,17 +371,10 @@ public class SystemScaffoldController {
              + "-- 1) DB 직접 실행용\n"
              + "INSERT INTO TB_MENU (MENU_CD, MENU_NM, MENU_URL, UP_MENU_CD, SORT_ORD, REG_ID, USE_YN)\n"
              + "VALUES ('" + menuCd + "', '" + domainName + "', '" + menuUrl + "', '" + parentCd + "', 99, 'SYSTEM', 'Y');\n\n"
-             + "INSERT INTO TB_MENU_AUTH (MENU_CD, AUTH_CD, REG_ID)\n"
-             + "VALUES ('" + menuCd + "', 'ROLE_ADMIN', 'SYSTEM');\n\n"
+             + "INSERT INTO TB_MENU_AUTH (MENU_CD, AUTH_CD, CAN_READ, CAN_WRITE, CAN_APPROVE, CAN_EXCEL, REG_ID)\n"
+             + "VALUES ('" + menuCd + "', 'ROLE_ADMIN', 'Y', 'Y', 'Y', 'Y', 'SYSTEM');\n\n"
              + "COMMIT;\n\n"
-             + "-- 2) TableInitRunner.java 에 추가할 코드\n"
-             + "insertMenuIfNotExist(jdbcTemplate,\n"
-             + "    \"" + menuCd + "\",\n"
-             + "    \"" + domainName + "\",\n"
-             + "    \"" + menuUrl + "\",\n"
-             + "    \"" + parentCd + "\",\n"
-             + "    99);  // ← SORT_ORD 실제 순서에 맞게 조정\n\n"
-             + "-- 3) 파일 배치 경로\n"
+             + "-- 2) 파일 배치 경로\n"
              + "-- src/main/java/.../dto/"        + module + "/" + domainClass + "SearchRequestDTO.java\n"
              + "-- src/main/java/.../vo/"         + module + "/" + domainClass + "VO.java\n"
              + "-- src/main/java/.../mapper/"     + module + "/" + domainClass + "Mapper.java\n"
@@ -386,6 +383,36 @@ public class SystemScaffoldController {
              + "-- src/main/resources/mapper/"    + module + "/" + domainClass + "Mapper.xml\n"
              + "-- src/main/resources/templates/" + module + "/" + domainId + "-manage.html\n"
              + "-- src/main/resources/static/js/" + module + "/" + domainId + "-manage.js\n";
+    }
+
+    private String getApiMappingDocSnippet(String module, String domainId, String domainClass, String domainName) {
+        String url = "/" + module + "/" + domainId;
+        return "| " + domainName + " | ⚠️ | `" + url + "` | `" + domainClass + "Controller` | `"
+            + module + "/" + domainId + "-manage.html` |\n"
+            + "\n"
+            + "- 데이터 API: `GET " + url + "/data`\n"
+            + "- JavaScript: `static/js/" + module + "/" + domainId + "-manage.js`\n"
+            + "- 상태: 스캐폴드 생성 직후이므로 실제 DB 매핑/업무 로직 확인 필요\n";
+    }
+
+    private String getMenuStructureDocSnippet(String domainName, List<String> searchVars, String[] cols) {
+        String searchText = searchVars.isEmpty()
+            ? "검색어"
+            : searchVars.stream().collect(Collectors.joining(", "));
+        String gridText = cols.length == 0
+            ? "미정의"
+            : java.util.Arrays.stream(cols)
+                .filter(c -> c != null && !c.trim().isEmpty())
+                .map(String::trim)
+                .collect(Collectors.joining(", "));
+
+        return "### " + domainName + "\n\n"
+            + "| 항목 | 내용 |\n"
+            + "|------|------|\n"
+            + "| **조회조건** | " + searchText + " |\n"
+            + "| **데이터 필드** | " + gridText + " |\n"
+            + "\n"
+            + "> 상태: 스캐폴드 생성 기준. 실제 DB 컬럼 확인 후 보정 필요.\n";
     }
 
     private String getDtoTemplate(String module, String domainClass, List<String> searchVars) {

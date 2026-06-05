@@ -1,125 +1,163 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-    layout:decorate="~{defaultLayout}">
-
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{defaultLayout}">
 <head>
-    <title>메뉴 관리 (트리형)</title>
-    <!-- TUI Grid CSS -->
+    <title>메뉴 관리(트리형)</title>
     <link rel="stylesheet" href="https://uicdn.toast.com/grid/latest/tui-grid.css" />
     <style>
-        /* 최소한의 권한 박스 높이 확보 외엔 모두 Bootstrap 클래스로 대체 */
         .auth-check-list {
             border: 1px solid #ced4da;
             background: #fff;
-            padding: 15px;
+            padding: 12px;
             border-radius: 6px;
-            max-height: 200px;
+            max-height: 160px;
             overflow-y: auto;
         }
     </style>
 </head>
-
 <body>
-    <main layout:fragment="content">
-        
-        <!-- 1. 헤더 영역 -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h4 class="mb-0 fw-bold">메뉴 및 권한 관리 <span class="text-muted fs-6 ms-2">(Tree Architecture)</span></h4>
-            <div class="d-flex gap-2">
-                <button class="btn btn-secondary btn-sm" onclick="location.href='/system/menu-manage'">
-                    <i class="cib-table"></i> 기존 테이블 뷰로 이동
-                </button>
-            </div>
-        </div>
+<main layout:fragment="content">
 
-        <div class="row g-4">
-            <!-- 2. 좌측: 트리 그리드 뷰 (Card 적용) -->
-            <div class="col-lg-8">
-                <div class="card shadow-sm border-0 h-100">
-                    <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
-                        <h6 class="mb-0 fw-bold">메뉴 계층 구조 (Tree Grid)</h6>
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-sm btn-outline-primary" id="btn-add-child"><i class="cil-level-down"></i> 하위 추가</button>
-                            <button class="btn btn-sm btn-outline-info" id="btn-add-sibling"><i class="cil-plus"></i> 동급 추가</button>
-                            <button class="btn btn-sm btn-outline-danger" id="btn-delete-node"><i class="cil-trash"></i> 선택 삭제</button>
-                        </div>
-                    </div>
-                    <div class="card-body p-0">
-                        <!-- TUI Grid가 렌더링될 DOM -->
-                        <div id="tree-grid"></div>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="mb-0 fw-bold">메뉴 및 권한 관리 <span class="text-muted fs-6 ms-2">(Tree)</span></h4>
+        <button class="btn btn-secondary btn-sm" onclick="location.href='/system/menu-manage'">
+            테이블형으로 이동
+        </button>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 fw-bold">메뉴 계층 구조</h6>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-primary" id="btn-add-child">하위 추가</button>
+                        <button class="btn btn-sm btn-outline-info" id="btn-add-sibling">동급 추가</button>
+                        <button class="btn btn-sm btn-outline-danger" id="btn-delete-node">선택 삭제</button>
                     </div>
                 </div>
-            </div>
-
-            <!-- 3. 우측: 상세 폼 (Card 적용) -->
-            <div class="col-lg-4">
-                <div class="card shadow-sm border-0 h-100">
-                    <div class="card-header bg-white border-bottom py-3">
-                        <h6 class="mb-0 fw-bold">메뉴 상세 속성 및 권한 할당</h6>
-                    </div>
-                    <div class="card-body bg-light">
-                        <input type="hidden" id="editMode" value="1"> <!-- 1:신규, 2:수정 -->
-
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold text-dark">메뉴 코드 <span class="text-danger">*</span></label>
-                            <input type="text" id="menuCd" class="form-control" placeholder="예: M_USER">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold text-dark">상위 메뉴 코드</label>
-                            <input type="text" id="upMenuCd" class="form-control bg-white" placeholder="(최상위면 비워둠)" readonly>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold text-dark">메뉴 명 <span class="text-danger">*</span></label>
-                            <input type="text" id="menuNm" class="form-control" placeholder="예: 사용자 관리">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold text-dark">URL 경로</label>
-                            <input type="text" id="menuUrl" class="form-control" placeholder="예: /account/user">
-                        </div>
-                        <div class="row g-3 mb-4">
-                            <div class="col-6">
-                                <label class="form-label fw-semibold text-dark">정렬 순서</label>
-                                <input type="number" id="sortOrd" class="form-control" value="1">
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label fw-semibold text-dark">사용 여부</label>
-                                <select id="dtlUseYn" class="form-select">
-                                    <option value="Y">사용 (Y)</option>
-                                    <option value="N">미사용 (N)</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <label class="form-label fw-semibold text-dark">접근 허용 그룹 (ROLE)</label>
-                        <div class="auth-check-list mb-4" id="authList">
-                            <div class="form-check mb-2">
-                                <input class="form-check-input" type="checkbox" name="authRoles" value="ROLE_ADMIN" id="role1">
-                                <label class="form-check-label text-dark" for="role1">ROLE_ADMIN (최고관리자)</label>
-                            </div>
-                            <div class="form-check mb-2">
-                                <input class="form-check-input" type="checkbox" name="authRoles" value="ROLE_MANAGER" id="role2">
-                                <label class="form-check-label text-dark" for="role2">ROLE_MANAGER (부서관리자)</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="authRoles" value="ROLE_USER" id="role3">
-                                <label class="form-check-label text-dark" for="role3">ROLE_USER (일반사용자)</label>
-                            </div>
-                        </div>
-
-                        <div class="d-grid">
-                            <button type="button" class="btn btn-primary" id="btn-save">저장 및 반영</button>
-                        </div>
-                    </div>
+                <div class="card-body p-0">
+                    <div id="tree-grid"></div>
                 </div>
             </div>
         </div>
-    </main>
 
-    <th:block layout:fragment="script">
-        <!-- TUI Grid JS -->
-        <script src="https://uicdn.toast.com/grid/latest/tui-grid.js"></script>
-        <!-- 모던화된 커스텀 로직 스크립트 -->
-        <script th:src="@{/js/system/menu-tree.js}"></script>
-    </th:block>
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h6 class="mb-0 fw-bold">메뉴 상세 및 권한</h6>
+                </div>
+                <div class="card-body bg-light">
+                    <input type="hidden" id="editMode" value="1">
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-dark">메뉴 코드 <span class="text-danger">*</span></label>
+                        <input type="text" id="menuCd" class="form-control" placeholder="예: M_USER">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-dark">상위 메뉴 코드</label>
+                        <input type="text" id="upMenuCd" class="form-control bg-white" placeholder="최상위 메뉴는 비워둠" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-dark">메뉴명 <span class="text-danger">*</span></label>
+                        <input type="text" id="menuNm" class="form-control" placeholder="예: 사용자 관리">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-dark">URL 경로</label>
+                        <input type="text" id="menuUrl" class="form-control" placeholder="예: /account/user-manage">
+                    </div>
+                    <div class="row g-3 mb-4">
+                        <div class="col-6">
+                            <label class="form-label fw-semibold text-dark">정렬 순서</label>
+                            <input type="number" id="sortOrd" class="form-control" value="1">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-semibold text-dark">사용 여부</label>
+                            <select id="dtlUseYn" class="form-select">
+                                <option value="Y">사용 (Y)</option>
+                                <option value="N">미사용 (N)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <label class="form-label fw-semibold text-dark">접근 허용 권한</label>
+                    <div class="auth-check-list mb-4" id="authList">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" name="authRoles" value="ROLE_ADMIN" id="treeRoleAdmin">
+                            <label class="form-check-label text-dark" for="treeRoleAdmin">ROLE_ADMIN (최고관리자)</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" name="authRoles" value="ROLE_MANAGER" id="treeRoleManager">
+                            <label class="form-check-label text-dark" for="treeRoleManager">ROLE_MANAGER (부서관리자)</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" name="authRoles" value="ROLE_USER" id="treeRoleUser">
+                            <label class="form-check-label text-dark" for="treeRoleUser">ROLE_USER (일반사용자)</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="authRoles" value="ROLE_VIEWER" id="treeRoleViewer">
+                            <label class="form-check-label text-dark" for="treeRoleViewer">ROLE_VIEWER (조회전용)</label>
+                        </div>
+                    </div>
+
+                    <h6 class="fw-bold mb-3">액션 권한</h6>
+                    <div class="table-responsive mb-4">
+                        <table class="table table-sm align-middle bg-white mb-0">
+                            <thead>
+                            <tr>
+                                <th>역할</th>
+                                <th class="text-center">READ</th>
+                                <th class="text-center">WRITE</th>
+                                <th class="text-center">APPROVE</th>
+                                <th class="text-center">EXCEL</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td>ADMIN</td>
+                                <td class="text-center"><input type="checkbox" name="authAction" data-role="ROLE_ADMIN" data-action="canRead" checked></td>
+                                <td class="text-center"><input type="checkbox" name="authAction" data-role="ROLE_ADMIN" data-action="canWrite" checked></td>
+                                <td class="text-center"><input type="checkbox" name="authAction" data-role="ROLE_ADMIN" data-action="canApprove" checked></td>
+                                <td class="text-center"><input type="checkbox" name="authAction" data-role="ROLE_ADMIN" data-action="canExcel" checked></td>
+                            </tr>
+                            <tr>
+                                <td>MANAGER</td>
+                                <td class="text-center"><input type="checkbox" name="authAction" data-role="ROLE_MANAGER" data-action="canRead" checked></td>
+                                <td class="text-center"><input type="checkbox" name="authAction" data-role="ROLE_MANAGER" data-action="canWrite" checked></td>
+                                <td class="text-center"><input type="checkbox" name="authAction" data-role="ROLE_MANAGER" data-action="canApprove"></td>
+                                <td class="text-center"><input type="checkbox" name="authAction" data-role="ROLE_MANAGER" data-action="canExcel" checked></td>
+                            </tr>
+                            <tr>
+                                <td>USER</td>
+                                <td class="text-center"><input type="checkbox" name="authAction" data-role="ROLE_USER" data-action="canRead" checked></td>
+                                <td class="text-center"><input type="checkbox" name="authAction" data-role="ROLE_USER" data-action="canWrite"></td>
+                                <td class="text-center"><input type="checkbox" name="authAction" data-role="ROLE_USER" data-action="canApprove"></td>
+                                <td class="text-center"><input type="checkbox" name="authAction" data-role="ROLE_USER" data-action="canExcel"></td>
+                            </tr>
+                            <tr>
+                                <td>VIEWER</td>
+                                <td class="text-center"><input type="checkbox" name="authAction" data-role="ROLE_VIEWER" data-action="canRead" checked></td>
+                                <td class="text-center"><input type="checkbox" name="authAction" data-role="ROLE_VIEWER" data-action="canWrite"></td>
+                                <td class="text-center"><input type="checkbox" name="authAction" data-role="ROLE_VIEWER" data-action="canApprove"></td>
+                                <td class="text-center"><input type="checkbox" name="authAction" data-role="ROLE_VIEWER" data-action="canExcel" checked></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="button" class="btn btn-primary" id="btn-save">저장 및 반영</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<th:block layout:fragment="script">
+    <script src="https://uicdn.toast.com/grid/latest/tui-grid.js"></script>
+    <script th:src="@{/js/system/menu-tree.js}"></script>
+</th:block>
 </body>
 </html>

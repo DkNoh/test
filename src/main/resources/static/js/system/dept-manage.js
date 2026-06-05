@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const pageBuilder = new TuiPageBuilder({
         el: 'grid',
-        apiUrl: '/api/dept/search',
+        apiUrl: '/system/dept-manage/search',
         searchInputs: ['deptId', 'depNm'],
         rowHeaders: ['rowNum'],
         columns: [
@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         CommonUtils.confirm(`[${depNm}] 부서를 등록하시겠습니까?`, async () => {
             try {
-                await axios.post('/api/dept/create', data);
+                await axios.post('/system/dept-manage/create', data);
                 CommonUtils.toast('부서가 성공적으로 등록되었습니다.', 'success');
                 document.querySelector('#createModal').style.display = 'none';
                 pageBuilder.searchData(1);

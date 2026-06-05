@@ -27,6 +27,7 @@ public class MenuAuthInterceptor implements HandlerInterceptor {
         if (requestURI.startsWith("/css/") || requestURI.startsWith("/js/") || requestURI.startsWith("/lib/") ||
             requestURI.startsWith("/vendor/") || requestURI.startsWith("/img/") || requestURI.startsWith("/error") ||
             requestURI.startsWith("/api/") || requestURI.equals("/") || 
+            requestURI.startsWith("/dashboard/") ||
             requestURI.equals("/login") || requestURI.equals("/logout")) {
             return true;
         }
@@ -39,14 +40,16 @@ public class MenuAuthInterceptor implements HandlerInterceptor {
             return false;
         }
 
+        String requiredAction = resolveRequiredAction(requestURI);
+
         // [Two-Track 아키텍처 대응] 화면 URL 뒤에 붙는 데이터 통신용 API URI(/data, /auth-data, /tree-data 등)를 부모 화면 URL로 변환하여 검증
         String checkURI = requestURI;
-        if (checkURI.matches(".*\\/(data|auth-data|tree-data|create|update|delete|process|search|excel|generate|save)$")) {
+        if (checkURI.matches(".*\\/(data|auth-data|tree-data|create|update|delete|process|search|excel|generate|save|upload|download)$")) {
             checkURI = checkURI.substring(0, checkURI.lastIndexOf("/"));
         }
 
         // [동적 인가 검증] 현재 로그인한 사람의 권한이 이 URL에 매핑되어 있는지 실시간 DB 체크
-        boolean hasAccess = menuService.hasAccess(checkURI, userRole);
+        boolean hasAccess = menuService.hasAccess(checkURI, userRole, requiredAction);
         
         // [Master-Detail Fallback] 직접 권한이 없더라도, 현재 띄워진 부모 화면(Referer)에 권한이 있다면 하위 API 호출을 허용
         if (!hasAccess) {
@@ -55,7 +58,7 @@ public class MenuAuthInterceptor implements HandlerInterceptor {
                 try {
                     java.net.URL refererUrl = new java.net.URL(referer);
                     String refererPath = refererUrl.getPath();
-                    if (menuService.hasAccess(refererPath, userRole)) {
+                    if (menuService.hasAccess(refererPath, userRole, requiredAction)) {
                         hasAccess = true;
                         log.debug("[보안 허용] 인가된 부모 화면({})에서의 API 호출로 승인됨: {}", refererPath, requestURI);
                     }
@@ -75,5 +78,18 @@ public class MenuAuthInterceptor implements HandlerInterceptor {
 
         // 정상적으로 권한이 매핑되어 있으면 화면 렌더링 컨트롤러로 패스
         return true;
+    }
+
+    private String resolveRequiredAction(String requestURI) {
+        if (requestURI.matches(".*/(save|create|update|delete|submit)$")) {
+            return "WRITE";
+        }
+        if (requestURI.matches(".*/(approve|reject|process)$")) {
+            return "APPROVE";
+        }
+        if (requestURI.matches(".*/(excel|upload|download)$")) {
+            return "EXCEL";
+        }
+        return "READ";
     }
 }

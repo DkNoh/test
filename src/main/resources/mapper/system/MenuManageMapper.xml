@@ -57,10 +57,23 @@
         ORDER BY M.UP_MENU_CD ASC, M.SORT_ORD ASC, M.MENU_CD ASC
     </select>
 
-    <select id="selectMenuAuths" resultType="string">
-        SELECT AUTH_CD 
+    <select id="selectMenuAuths" resultType="com.example.sms.dto.system.MenuSaveRequestDTO$MenuAuthPermissionDTO">
+        SELECT
+            AUTH_CD,
+            NVL(CAN_READ, 'Y') AS canRead,
+            NVL(CAN_WRITE, 'N') AS canWrite,
+            NVL(CAN_APPROVE, 'N') AS canApprove,
+            NVL(CAN_EXCEL, 'N') AS canExcel
         FROM TB_MENU_AUTH 
         WHERE MENU_CD = #{menuCd}
+        ORDER BY AUTH_CD
+    </select>
+
+    <select id="countMenusByUrlExcludeCd" resultType="int">
+        SELECT COUNT(1)
+        FROM TB_MENU
+        WHERE MENU_URL = #{menuUrl}
+          AND MENU_CD != #{menuCd}
     </select>
 
     <insert id="insertMenu">
@@ -101,8 +114,24 @@
     </delete>
 
     <insert id="insertMenuAuth">
-        INSERT INTO TB_MENU_AUTH (MENU_CD, AUTH_CD, REG_ID)
-        VALUES (#{menuCd}, #{authCd}, #{regId})
+        INSERT INTO TB_MENU_AUTH (
+            MENU_CD,
+            AUTH_CD,
+            CAN_READ,
+            CAN_WRITE,
+            CAN_APPROVE,
+            CAN_EXCEL,
+            REG_ID
+        )
+        VALUES (
+            #{menuCd},
+            #{auth.authCd},
+            #{auth.canRead},
+            #{auth.canWrite},
+            #{auth.canApprove},
+            #{auth.canExcel},
+            #{regId}
+        )
     </insert>
 
     <delete id="deleteMenuAuths">

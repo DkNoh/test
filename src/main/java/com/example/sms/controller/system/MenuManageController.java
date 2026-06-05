@@ -48,7 +48,7 @@ public class MenuManageController {
 
     @ResponseBody
     @GetMapping("/auth-data")
-    public ResponseEntity<ApiResponse<List<String>>> getAuthData(@RequestParam String menuCd) {
+    public ResponseEntity<ApiResponse<List<MenuSaveRequestDTO.MenuAuthPermissionDTO>>> getAuthData(@RequestParam String menuCd) {
         return ResponseEntity.ok(ApiResponse.success(service.getMenuAuths(menuCd)));
     }
 

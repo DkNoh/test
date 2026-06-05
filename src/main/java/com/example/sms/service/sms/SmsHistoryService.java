@@ -2,6 +2,7 @@ package com.example.sms.service.sms;
 
 import com.example.sms.dto.common.PageResponseDTO;
 import com.example.sms.dto.sms.SmsHistorySearchRequestDTO;
+import com.example.sms.dto.sms.SmsHistorySendResultDTO;
 import com.example.sms.mapper.sms.SmsHistoryMapper;
 import com.example.sms.vo.sms.SmsHistoryVO;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,15 @@ public class SmsHistoryService {
     public PageResponseDTO<SmsHistoryVO> search(SmsHistorySearchRequestDTO request) {
         int totalCount = mapper.count(request);
         List<SmsHistoryVO> list = mapper.selectList(request);
+        return PageResponseDTO.of(list, request, totalCount);
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponseDTO<SmsHistorySendResultDTO> searchSendResults(SmsHistorySearchRequestDTO request) {
+        int totalCount = mapper.count(request);
+        List<SmsHistorySendResultDTO> list = mapper.selectList(request).stream()
+                .map(SmsHistorySendResultDTO::from)
+                .toList();
         return PageResponseDTO.of(list, request, totalCount);
     }
 

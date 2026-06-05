@@ -40,10 +40,6 @@
 ```
 sms-project-v2/
 ├── pom.xml                          # Maven 빌드 설정
-├── oracle_schema.sql                # Oracle DDL (DEP, EMP, sms_history)
-├── schema.sql                       # PostgreSQL DDL (개발 참고용)
-├── audit_table.sql                  # 감사 로그 테이블 DDL
-├── insert_10000.sql                 # 대량 더미 데이터
 ├── src/
 │   └── main/
 │       ├── java/com/example/sms/
@@ -56,7 +52,6 @@ sms-project-v2/
 │       │   │   ├── SecurityConfig.java       # Spring Security 설정
 │       │   │   ├── WebMvcConfig.java         # MVC / 인터셉터 등록
 │       │   │   ├── MenuAuthInterceptor.java  # URL 기반 동적 접근 제어
-│       │   │   ├── TableInitRunner.java      # 앱 기동 시 DB 자동 초기화
 │       │   │   └── ValidationCheck.java     # 유효성 검사 유틸
 │       │   ├── controller/
 │       │   │   ├── account/                  # 로그인 / 사원 관리

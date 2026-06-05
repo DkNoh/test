@@ -37,7 +37,7 @@ class TuiPageBuilder {
             totalCountSelector: '.total-count strong',
             onGridUpdated: null,
             // [API 단건 조회(패턴B) 옵션]
-            detailApiUrl: null,       // 예: '/api/v1/emp/detail'
+            detailApiUrl: null,       // 예: '/sample/detail'
             detailParamKey: null,     // 예: 'empId'
             onDetailLoaded: null,     // API 통신 성공 후 DTO를 받을 콜백
             // [단순 뷰어(패턴C) 자동 생성 옵션]

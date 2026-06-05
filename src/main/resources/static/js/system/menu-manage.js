@@ -36,6 +36,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const btnDelete = document.getElementById('btn-delete');
     const authCheckboxes = document.querySelectorAll('input[name="authRoles"]');
+    const actionCheckboxes = document.querySelectorAll('input[name="authAction"]');
 
     // 폼 초기화 함수
     function resetForm() {
@@ -49,8 +50,39 @@ document.addEventListener('DOMContentLoaded', function () {
         formEls.useYn.value = "Y";
         
         authCheckboxes.forEach(cb => cb.checked = false);
+        setDefaultActionPermissions();
         btnDelete.style.display = 'none';
     }
+
+    function setDefaultActionPermissions() {
+        const defaults = {
+            ROLE_ADMIN: { canRead: true, canWrite: true, canApprove: true, canExcel: true },
+            ROLE_MANAGER: { canRead: true, canWrite: true, canApprove: false, canExcel: true },
+            ROLE_USER: { canRead: true, canWrite: false, canApprove: false, canExcel: false },
+            ROLE_VIEWER: { canRead: true, canWrite: false, canApprove: false, canExcel: true }
+        };
+
+        actionCheckboxes.forEach(cb => {
+            const role = cb.dataset.role;
+            const action = cb.dataset.action;
+            cb.checked = Boolean(defaults[role] && defaults[role][action]);
+        });
+    }
+
+    function setActionRowEnabled(role, enabled) {
+        actionCheckboxes.forEach(cb => {
+            if (cb.dataset.role === role) {
+                cb.disabled = !enabled;
+            }
+        });
+    }
+
+    authCheckboxes.forEach(cb => {
+        cb.addEventListener('change', () => {
+            setActionRowEnabled(cb.value, cb.checked);
+        });
+        setActionRowEnabled(cb.value, cb.checked);
+    });
 
     // 그리드 행 클릭 이벤트 -> 상세 정보 로드
     grid.on('click', (ev) => {
@@ -71,9 +103,19 @@ document.addEventListener('DOMContentLoaded', function () {
         // 해당 메뉴의 권한 데이터 서버에서 불러오기
         axios.get(`/system/menu-manage/auth-data?menuCd=${row.menuCd}`)
             .then(res => {
-                const roles = res.data.data || [];
+                const permissions = res.data || [];
+                const roles = permissions.map(auth => auth.authCd);
                 authCheckboxes.forEach(cb => {
                     cb.checked = roles.includes(cb.value);
+                    setActionRowEnabled(cb.value, cb.checked);
+                });
+                setDefaultActionPermissions();
+                permissions.forEach(auth => {
+                    actionCheckboxes.forEach(cb => {
+                        if (cb.dataset.role === auth.authCd) {
+                            cb.checked = auth[cb.dataset.action] === 'Y';
+                        }
+                    });
                 });
             });
     });
@@ -91,6 +133,22 @@ document.addEventListener('DOMContentLoaded', function () {
             .filter(cb => cb.checked)
             .map(cb => cb.value);
 
+        const authPermissions = checkedRoles.map(role => {
+            const permission = {
+                authCd: role,
+                canRead: 'N',
+                canWrite: 'N',
+                canApprove: 'N',
+                canExcel: 'N'
+            };
+            actionCheckboxes.forEach(cb => {
+                if (cb.dataset.role === role) {
+                    permission[cb.dataset.action] = cb.checked ? 'Y' : 'N';
+                }
+            });
+            return permission;
+        });
+
         const payload = {
             mode: formEls.mode.value,
             menu: {
@@ -101,7 +159,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 sortOrd: parseInt(formEls.sortOrd.value || 1, 10),
                 useYn: formEls.useYn.value
             },
-            authRoles: checkedRoles
+            authRoles: checkedRoles,
+            authPermissions: authPermissions
         };
 
         if (confirm('저장하시겠습니까?')) {

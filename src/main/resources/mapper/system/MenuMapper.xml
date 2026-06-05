@@ -20,6 +20,7 @@
         INNER JOIN TB_MENU_AUTH B ON A.MENU_CD = B.MENU_CD
         WHERE A.USE_YN = 'Y'
           AND B.AUTH_CD = #{authCd, jdbcType=VARCHAR}
+          AND NVL(B.CAN_READ, 'Y') = 'Y'
         ORDER BY A.UP_MENU_CD ASC NULLS FIRST, A.SORT_ORD ASC
     </select>
 
@@ -34,6 +35,20 @@
         WHERE A.USE_YN = 'Y'
           AND A.MENU_URL = #{menuUrl, jdbcType=VARCHAR}
           AND B.AUTH_CD = #{authCd, jdbcType=VARCHAR}
+          <choose>
+              <when test="action == 'WRITE'">
+                  AND NVL(B.CAN_WRITE, 'N') = 'Y'
+              </when>
+              <when test="action == 'APPROVE'">
+                  AND NVL(B.CAN_APPROVE, 'N') = 'Y'
+              </when>
+              <when test="action == 'EXCEL'">
+                  AND NVL(B.CAN_EXCEL, 'N') = 'Y'
+              </when>
+              <otherwise>
+                  AND NVL(B.CAN_READ, 'Y') = 'Y'
+              </otherwise>
+          </choose>
     </select>
 
 </mapper>

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.sms.mapper.sms.DeptSendStatMapper">
+
+    <sql id="baseFrom">
+        FROM SMS_HISTORY h
+        LEFT JOIN TB_MESSAGE m ON h.SEND_TYPE = m.MSG_CODE
+        LEFT JOIN TB_DEPT d ON m.DEPT_ID = d.DEPT_ID
+        <where>
+            <if test="searchDate != null and searchDate != ''">
+                AND TRUNC(h.SENT_AT) = TO_DATE(#{searchDate}, 'YYYY-MM-DD')
+            </if>
+            <if test="deptId != null and deptId != ''">
+                AND m.DEPT_ID = #{deptId}
+            </if>
+        </where>
+    </sql>
+
+    <select id="count" resultType="int">
+        SELECT COUNT(1)
+        FROM (
+            SELECT NVL(m.DEPT_ID, 'UNKNOWN') AS deptId
+            <include refid="baseFrom"/>
+            GROUP BY NVL(m.DEPT_ID, 'UNKNOWN'), NVL(d.DEPT_NM, '미지정')
+        )
+    </select>
+
+    <select id="selectList" resultType="com.example.sms.vo.sms.DeptSendStatVO">
+        SELECT
+            NVL(m.DEPT_ID, 'UNKNOWN') AS deptId,
+            NVL(d.DEPT_NM, '미지정') AS deptNm,
+            COUNT(CASE WHEN h.SEND_STATUS = 'WAIT' THEN 1 END) AS sendingCount,
+            COUNT(CASE WHEN h.SEND_STATUS = 'FAIL' THEN 1 END) AS failCount,
+            COUNT(CASE WHEN h.SEND_STATUS = 'SUCCESS' THEN 1 END) AS successCount,
+            COUNT(1) AS totalCount
+        <include refid="baseFrom"/>
+        GROUP BY NVL(m.DEPT_ID, 'UNKNOWN'), NVL(d.DEPT_NM, '미지정')
+        ORDER BY NVL(d.DEPT_NM, '미지정'), NVL(m.DEPT_ID, 'UNKNOWN')
+        OFFSET #{offset} ROWS FETCH NEXT #{size} ROWS ONLY
+    </select>
+
+</mapper>

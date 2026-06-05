@@ -1,4 +1,4 @@
-package com.example.sms.controller.api;
+package com.example.sms.controller.common;
 
 import com.example.sms.dto.dashboard.DashboardResponseDTO;
 import com.example.sms.service.DashboardService;
@@ -9,15 +9,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/dashboard")
+@RequestMapping("/dashboard")
 @RequiredArgsConstructor
-public class DashboardApiController {
+public class DashboardController {
 
     private final DashboardService dashboardService;
 
     @GetMapping("/summary")
     public ResponseEntity<DashboardResponseDTO> getSummary() {
-        // NOTE: 예외처리는 GlobalExceptionHandler에서 일괄 담당
         return ResponseEntity.ok(dashboardService.getDashboardSummary());
     }
 }

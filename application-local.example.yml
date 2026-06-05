@@ -1,0 +1,25 @@
+# Optional local override sample.
+# Keep real credentials out of Git. Prefer environment variables for shared setups.
+
+spring:
+  profiles:
+    active: local
+
+ldap:
+  url: ldap://your.ldap.server:389
+  base-dn: ou=users,dc=example,dc=com
+
+app:
+  upload:
+    dir: C:/Work/upload
+
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+  datasource:
+    url: jdbc:log4jdbc:oracle:thin:@localhost:1521/SMS
+    username: system
+    password: 1234
+    driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy

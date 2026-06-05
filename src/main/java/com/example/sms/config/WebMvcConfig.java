@@ -30,7 +30,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/vendor/**",
                         "/img/**", 
                         "/error",
-                        "/api/**",      // 비동기 API 통신은 제외 (필요 시 별도 토큰/권한 필터 적용)
+                        "/api/**",      // 실제 API 거래 및 공통코드 API는 별도 기준으로 관리
+                        "/dashboard/**",
                         "/favicon.ico"
                 );
     }
