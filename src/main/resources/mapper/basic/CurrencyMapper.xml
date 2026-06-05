@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.sms.mapper.basic.CurrencyMapper">
+
+    <!--
+        BASE_DT: DB 저장 형식 YYYYMMDD (8자리)
+        '-' 제거는 TuiPageBuilder에서 공통 처리 (type="date" 자동 변환)
+    -->
+    <sql id="searchConditions">
+        <where>
+            <if test="baseDt != null and baseDt != ''">
+                AND R.BASE_DT = #{baseDt}
+            </if>
+            <if test="currencyCd != null and currencyCd != ''">
+                AND R.CURRENCY_CD = #{currencyCd}
+            </if>
+            <if test="providerCd != null and providerCd != ''">
+                AND R.PROVIDER_CD = #{providerCd}
+            </if>
+            <if test="bankCd != null and bankCd != ''">
+                AND R.PROVIDER_CD = #{bankCd}
+            </if>
+        </where>
+    </sql>
+
+    <select id="count" resultType="int">
+        SELECT COUNT(1)
+        FROM      TB_EXCHANGE_RATE R
+        JOIN      TB_CURRENCY      C ON C.CURRENCY_CD = R.CURRENCY_CD
+        JOIN      TB_RATE_PROVIDER P ON P.PROVIDER_CD = R.PROVIDER_CD
+        <include refid="searchConditions"/>
+    </select>
+
+    <select id="selectList" resultType="com.example.sms.vo.basic.CurrencyVO">
+        SELECT A.*
+        FROM (
+            SELECT  R.RATE_SEQ, R.BASE_DT, R.CURRENCY_CD, C.CURRENCY_NM, C.COUNTRY_NM,
+                    C.UNIT, R.PROVIDER_CD, P.PROVIDER_NM,
+                    R.BASE_RATE, R.CASH_BUY_RATE, R.CASH_SELL_RATE, R.SEND_RATE, R.RECV_RATE
+            FROM      TB_EXCHANGE_RATE R
+            JOIN      TB_CURRENCY      C ON C.CURRENCY_CD = R.CURRENCY_CD
+            JOIN      TB_RATE_PROVIDER P ON P.PROVIDER_CD = R.PROVIDER_CD
+            <include refid="searchConditions"/>
+        ) A
+        ORDER BY A.BASE_DT DESC, A.RATE_SEQ DESC
+        OFFSET #{offset} ROWS FETCH NEXT #{size} ROWS ONLY
+    </select>
+
+    <insert id="insert">INSERT INTO /* TODO */ (REG_DT) VALUES (SYSDATE)</insert>
+    <update id="update">UPDATE /* TODO */ SET MOD_DT = SYSDATE WHERE ID = #{id}</update>
+    <delete id="delete">DELETE FROM /* TODO */ WHERE ID = #{id}</delete>
+
+    <select id="selectListForExcel" resultType="java.util.HashMap">
+        SELECT  R.RATE_SEQ, R.BASE_DT, R.CURRENCY_CD, C.CURRENCY_NM, C.COUNTRY_NM,
+                C.UNIT, R.PROVIDER_CD, P.PROVIDER_NM,
+                R.BASE_RATE, R.CASH_BUY_RATE, R.CASH_SELL_RATE, R.SEND_RATE, R.RECV_RATE
+        FROM      TB_EXCHANGE_RATE R
+        JOIN      TB_CURRENCY      C ON C.CURRENCY_CD = R.CURRENCY_CD
+        JOIN      TB_RATE_PROVIDER P ON P.PROVIDER_CD = R.PROVIDER_CD
+        <include refid="searchConditions"/>
+        ORDER BY R.BASE_DT DESC, R.RATE_SEQ DESC
+    </select>
+
+</mapper>

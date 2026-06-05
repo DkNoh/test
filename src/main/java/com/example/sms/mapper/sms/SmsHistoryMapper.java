@@ -9,8 +9,7 @@ import java.util.List;
 public interface SmsHistoryMapper {
     int count(SmsHistorySearchRequestDTO request);
     List<SmsHistoryVO> selectList(SmsHistorySearchRequestDTO request);
-
     int insert(SmsHistoryVO vo);
     int update(SmsHistoryVO vo);
-    int delete(String id);
+    int delete(Long id);
 }

@@ -2,107 +2,67 @@
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{defaultLayout}">
-<head>
-    <title>메시지 발송 이력 조회</title>
-</head>
+<head><title>발송내역조회</title></head>
 <body>
 <main layout:fragment="content">
-    
-    <!-- 타이틀 영역 -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <h4 class="mb-0 fw-bold">메시지 발송 이력 조회 <span class="text-muted fs-6 ms-2">(sms > history)</span></h4>
-        </div>
+    <div class="content-header">
+        <h2>발송내역조회 <small style="color:#888;font-size:14px;margin-left:10px;">(SMS발송조회 &gt; 발송내역조회)</small></h2>
     </div>
-
-    <!-- 검색 조건 (Card) -->
     <div class="card mb-4 shadow-sm border-0">
         <div class="card-body">
             <div class="row align-items-center g-3">
-                
-                <!-- 발송일자 -->
+                <div class="col-auto"><label class="col-form-label fw-bold">조회기간</label></div>
+                <div class="col-auto d-flex align-items-center gap-1 border rounded px-2 py-1 bg-white" style="font-size:0.875rem;">
+                    <span class="text-muted" style="white-space:nowrap; font-size:0.78rem;">시작</span>
+                    <input type="datetime-local" id="startDateTime" class="form-control form-control-sm border-0 shadow-none p-0" style="width:155px;">
+                    <span class="text-muted mx-1 fw-bold">~</span>
+                    <span class="text-muted" style="white-space:nowrap; font-size:0.78rem;">종료</span>
+                    <input type="datetime-local" id="endDateTime" class="form-control form-control-sm border-0 shadow-none p-0" style="width:155px;">
+                </div>
+                <div class="col-auto d-none d-xl-block"><div style="height:24px;width:1px;background:#dee2e6;margin:0 8px;"></div></div>
+                <div class="col-auto"><label for="sendStatus" class="col-form-label fw-bold">전송결과</label></div>
                 <div class="col-auto">
-                    <label class="col-form-label fw-bold">발송일자</label>
-                </div>
-                <div class="col-auto d-flex align-items-center gap-2">
-                    <input type="date" id="startDate" class="form-control" style="width:140px">
-                    <span class="text-muted">~</span>
-                    <input type="date" id="endDate" class="form-control" style="width:140px">
-                </div>
-
-                <div class="col-auto d-none d-lg-block">
-                    <div style="height: 24px; width: 1px; background-color: #dee2e6; margin: 0 8px;"></div>
-                </div>
-
-                <!-- 발송명/캠페인명 -->
-                <div class="col-auto">
-                    <label for="searchName" class="col-form-label fw-bold">발송명</label>
-                </div>
-                <div class="col-md-2">
-                    <input type="text" id="searchName" class="form-control" placeholder="캠페인/발송명 입력">
-                </div>
-
-                <div class="col-auto d-none d-xl-block">
-                    <div style="height: 24px; width: 1px; background-color: #dee2e6; margin: 0 8px;"></div>
-                </div>
-
-                <!-- 상태 -->
-                <div class="col-auto">
-                    <label for="status" class="col-form-label fw-bold">발송상태</label>
-                </div>
-                <div class="col-md-2">
-                    <input type="text" id="status" class="form-control" placeholder="상태코드 입력">
-                </div>
-
-                <!-- 액션 버튼 -->
-                <div class="col-auto ms-auto d-flex gap-2">
-                    <button type="button" class="btn btn-primary px-4" id="btn-search">조회</button>
-                    <button type="button" class="btn btn-secondary px-3" id="btn-reset">초기화</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 메인 데이터 그리드 (Card) -->
-    <div class="card shadow-sm border-0 mb-4">
-        <div class="card-header bg-white d-flex justify-content-between align-items-center py-3 border-bottom-0">
-            <span class="fs-6 fw-medium">총 <strong class="text-primary" id="total-count">0</strong>건</span>
-            
-            <div class="d-flex align-items-center gap-3">
-                <div class="d-flex align-items-center gap-2">
-                    <span class="text-muted" style="font-size: 0.85rem;">페이지당</span>
-                    <select id="pageSizeSelect" class="form-select form-select-sm" style="width: 80px;">
-                        <option value="10">10건</option>
-                        <option value="20">20건</option>
-                        <option value="50">50건</option>
+                    <select id="sendStatus" class="form-select" style="width:130px;">
+                        <option value="">전체</option>
+                        <option value="WAIT">대기</option>
+                        <option value="SUCCESS">성공</option>
+                        <option value="FAIL">실패</option>
                     </select>
                 </div>
-                <div class="border-start ps-3">
-                    <button type="button" class="btn btn-success btn-sm px-3 shadow-none" id="btn-create">+ 신규 등록</button>
+                <div class="col-auto d-none d-xl-block"><div style="height:24px;width:1px;background:#dee2e6;margin:0 8px;"></div></div>
+                <div class="col-auto"><label for="receiverNo" class="col-form-label fw-bold">받는번호</label></div>
+                <div class="col-md-2"><input type="text" id="receiverNo" class="form-control" placeholder="수신번호 입력"></div>
+                <div class="col-auto d-none d-xl-block"><div style="height:24px;width:1px;background:#dee2e6;margin:0 8px;"></div></div>
+                <div class="col-auto"><label for="bizDept" class="col-form-label fw-bold">부서명</label></div>
+                <div class="col-auto">
+                    <select id="bizDept" class="form-select" style="width:140px;"><option value="">전체</option></select>
+                </div>
+                <div class="col-auto"><label for="sendType" class="col-form-label fw-bold">메세지명</label></div>
+                <div class="col-auto">
+                    <select id="sendType" class="form-select" style="width:160px;" disabled><option value="">부서 선택 후</option></select>
+                </div>
+                <div class="col-auto ms-auto d-flex gap-2">
+                    <button type="button" id="btn-search" class="btn btn-primary px-4">조회</button>
+                    <button type="button" id="btn-reset" class="btn btn-secondary px-3">초기화</button>
                 </div>
             </div>
         </div>
-        
-        <div class="card-body p-0">
-            <!-- TUI Grid Placeholder -->
-            <div id="grid" style="width: 100%;"></div>
-        </div>
-        
-        <div class="card-footer bg-white border-0 py-3">
-            <!-- 페이지네이션 -->
-            <div id="pagination" class="d-flex justify-content-center"></div>
-        </div>
     </div>
-
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+            <span class="fs-6 fw-medium">총 <strong class="text-primary" id="total-count">0</strong>건</span>
+            <div class="d-flex align-items-center gap-2">
+                <span class="text-muted" style="font-size:0.85rem;">페이지당</span>
+                <select id="pageSizeSelect" class="form-select form-select-sm" style="width:80px;">
+                    <option value="10">10건</option><option value="20">20건</option><option value="50">50건</option>
+                </select>
+            </div>
+        </div>
+        <div class="card-body p-0"><div id="grid" style="width:100%;"></div></div>
+        <div class="card-footer bg-white border-0 py-3"><div id="pagination" class="d-flex justify-content-center"></div></div>
+    </div>
 </main>
-
 <th:block layout:fragment="script">
-    <script>
-        // TUI Grid 레이아웃 보정
-        setTimeout(() => {
-            if (typeof grid !== 'undefined' && grid) grid.refreshLayout();
-        }, 100);
-    </script>
     <script th:src="@{/js/sms/history-manage.js}"></script>
 </th:block>
 </body>

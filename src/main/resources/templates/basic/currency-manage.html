@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{defaultLayout}">
+<head>
+    <title>환율조회</title>
+    <!-- Autocomplete CSS는 defaultLayout.html 공통 스타일로 이동 -->
+</head>
+<body>
+<main layout:fragment="content">
+
+    <div class="content-header">
+        <h2>환율조회 <small style="color:#888;font-size:14px;margin-left:10px;">(기본메뉴 &gt; 환율조회)</small></h2>
+    </div>
+
+    <div class="card mb-4 shadow-sm border-0">
+        <div class="card-body">
+            <div class="row align-items-center g-3">
+
+                <!-- 기준일자 -->
+                <div class="col-auto"><label for="baseDt" class="col-form-label fw-bold">기준일자</label></div>
+                <div class="col-auto"><input type="date" id="baseDt" class="form-control" style="width:160px;"></div>
+
+                <div class="col-auto d-none d-xl-block"><div style="height:24px;width:1px;background:#dee2e6;margin:0 8px;"></div></div>
+
+                <!-- 통화코드 -->
+                <div class="col-auto"><label for="currencyCd" class="col-form-label fw-bold">통화코드</label></div>
+                <div class="col-auto"><input type="text" id="currencyCd" class="form-control" style="width:90px;" placeholder="USD"></div>
+
+                <div class="col-auto d-none d-xl-block"><div style="height:24px;width:1px;background:#dee2e6;margin:0 8px;"></div></div>
+
+                <!-- 은행코드 콤보 -->
+                <div class="col-auto"><label for="bankCdCombo" class="col-form-label fw-bold">은행 (콤보)</label></div>
+                <div class="col-auto">
+                    <select id="bankCdCombo" class="form-select" style="width:180px;">
+                        <option value="">전체</option>
+                    </select>
+                </div>
+
+                <div class="col-auto d-none d-xl-block"><div style="height:24px;width:1px;background:#dee2e6;margin:0 8px;"></div></div>
+
+                <!-- 은행코드 텍스트 + 말풍선 자동완성 -->
+                <div class="col-auto"><label class="col-form-label fw-bold">은행 (직접입력)</label></div>
+                <div class="col-auto autocomplete-wrap">
+                    <input type="text" id="bankCdText" class="form-control" style="width:160px;"
+                           placeholder="KB, KEB... 입력" autocomplete="off">
+                    <div id="bankBalloon" class="autocomplete-balloon"></div>
+                </div>
+
+                <!-- 액션 버튼 -->
+                <div class="col-auto ms-auto d-flex gap-2">
+                    <button type="button" id="btn-search" class="btn btn-primary px-4">조회</button>
+                    <button type="button" id="btn-reset"  class="btn btn-secondary px-3">초기화</button>
+                    <button type="button" id="btn-excel"      class="btn btn-success ms-1">엑셀</button>
+                    <button type="button" id="btn-excel-grid" class="btn btn-info ms-1">화면 엑셀</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+            <span class="fs-6 fw-medium">총 <strong class="text-primary" id="total-count">0</strong>건</span>
+            <div class="d-flex align-items-center gap-2">
+                <span class="text-muted" style="font-size:0.85rem;">페이지당</span>
+                <select id="pageSizeSelect" class="form-select form-select-sm" style="width:80px;">
+                    <option value="10">10건</option><option value="20">20건</option><option value="50">50건</option>
+                </select>
+            </div>
+        </div>
+        <div class="card-body p-0"><div id="grid" style="width:100%;"></div></div>
+        <div class="card-footer bg-white border-0 py-3"><div id="pagination" class="d-flex justify-content-center"></div></div>
+    </div>
+
+</main>
+<th:block layout:fragment="script">
+    <script th:src="@{/js/basic/currency-manage.js}"></script>
+</th:block>
+</body>
+</html>

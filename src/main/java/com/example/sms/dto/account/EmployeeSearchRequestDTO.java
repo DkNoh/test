@@ -7,7 +7,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class EmployeeSearchRequestDTO extends PageRequestDTO {
-    private String depId;
-    private String empNm;
+    private String deptId;
+    private String empName;
     private String empId;
 }

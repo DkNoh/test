@@ -84,15 +84,16 @@ public class SecurityConfig {
                     EmployeeVO emp = employeeMapper.findById(username);
                     if (emp != null) {
                         request.getSession().setAttribute("loginIp", ip);
-                        request.getSession().setAttribute("loginTime", emp.getLastLoginDttm() != null ? emp.getLastLoginDttm() : "첫 접속입니다");
-                        request.getSession().setAttribute("userName", emp.getEmpNm());
-                        
-                        String role = "9".equals(emp.getEmpLev()) ? "ROLE_ADMIN" : "ROLE_USER";
+                        request.getSession().setAttribute("loginTime", emp.getLastLoginTime() != null ? emp.getLastLoginTime().toString() : "첫 접속입니다");
+                        request.getSession().setAttribute("userName", emp.getEmpName());
+
+                        String role = emp.getUserRole() != null ? emp.getUserRole() : "ROLE_USER";
                         request.getSession().setAttribute("userRole", role);
-                        
+
                         java.util.List<com.example.sms.dto.MenuDTO> userMenus = menuService.getHierarchicalMenus(role);
                         request.getSession().setAttribute("userMenus", userMenus);
-                        
+
+                        emp.setLastLoginIp(ip);
                         employeeMapper.updateLastLogin(emp);
                     } else {
                         // NOTE: 개발 환경의 인메모리(In-Memory) 임시 계정을 위한 분기처리

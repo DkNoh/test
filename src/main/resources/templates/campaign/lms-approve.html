@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{defaultLayout}">
+<head><title>LMS 승인</title></head>
+<body>
+<main layout:fragment="content">
+    <div class="content-header">
+        <h2>LMS 승인 <small style="color:#888;font-size:14px;margin-left:10px;">(캠페인 SMS &gt; LMS승인)</small></h2>
+    </div>
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+            <span class="fs-6 fw-medium">승인 대기 목록 — <strong class="text-primary" id="total-count">0</strong>건</span>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="text-center" style="width:50px;">번호</th>
+                        <th>캠페인명</th>
+                        <th class="text-center" style="width:100px;">대상수</th>
+                        <th class="text-center" style="width:100px;">등록자</th>
+                        <th class="text-center" style="width:160px;">등록일시</th>
+                        <th class="text-center" style="width:160px;">처리</th>
+                    </tr>
+                </thead>
+                <tbody id="pendingBody">
+                    <tr><td colspan="6" class="text-center text-muted py-4">로딩 중...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+<th:block layout:fragment="script">
+    <script th:src="@{/js/campaign/lms-approve.js}"></script>
+</th:block>
+</body>
+</html>

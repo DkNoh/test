@@ -2,32 +2,13 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.example.sms.mapper.EmployeeMapper">
 
-    <select id="findById" resultType="com.example.sms.vo.system.EmployeeVO">
-        SELECT 
-            e.EMP_ID, e.DEP_ID, d.DEP_NM, e.EMP_NM, e.EMP_LEV, e.REG_DTTM, e.MAX_SEND_CNT,
-            e.PERM_CPN, e.PERM_SYS, e.PERM_STA, e.NOW_SEND_CNT, e.LAST_SEND_DT,
-            e.LOGIN_FAIL_CNT, e.EMP_PHONE, e.PERM_PSN, e.PERM_AUT, e.PERM_CPN_AGREE,
-            e.DEL_DTTM, e.ACT_YN, e.LAST_LOGIN_DTTM, e.PASS_UPDATE_DTTM, e.PASS_UPDATE_YN,
-            e.PERM_SND_CANCEL, e.UPDATE_DTTM, e.PERM_NOM, e.PERM_NOM_AGREE,
-            e.PERM_MMS, e.PERM_MMS_AGREE, e.MFA_YN
-        FROM SMS.EMP e
-        LEFT JOIN SMS.DEP d ON e.DEP_ID = d.DEP_ID
-        WHERE e.EMP_ID = #{empId}
-    </select>
-
-    <update id="updateLastLogin">
-        UPDATE SMS.EMP
-        SET LAST_LOGIN_DTTM = TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
-        WHERE EMP_ID = #{empId}
-    </update>
-
     <sql id="employeeSearchConditions">
         <where>
-            <if test="depId != null and depId != ''">
-                AND e.DEP_ID = #{depId}
+            <if test="deptId != null and deptId != ''">
+                AND e.DEPT_ID = #{deptId}
             </if>
-            <if test="empNm != null and empNm != ''">
-                AND e.EMP_NM LIKE '%' || #{empNm} || '%'
+            <if test="empName != null and empName != ''">
+                AND e.EMP_NAME LIKE '%' || #{empName} || '%'
             </if>
             <if test="empId != null and empId != ''">
                 AND e.EMP_ID LIKE '%' || #{empId} || '%'
@@ -35,34 +16,49 @@
         </where>
     </sql>
 
+    <select id="findById" resultType="com.example.sms.vo.system.EmployeeVO">
+        SELECT
+            e.EMP_ID, e.EMP_NAME, e.DEPT_ID, d.DEPT_NM, e.USE_YN, e.USER_ROLE,
+            e.AUTH_READ, e.AUTH_APPROVE, e.AUTH_CAMPAIGN,
+            e.LAST_LOGIN_IP, e.LAST_LOGIN_TIME, e.CREATED_AT, e.UPDATED_AT
+        FROM EMPLOYEE e
+        LEFT JOIN TB_DEPT d ON e.DEPT_ID = d.DEPT_ID
+        WHERE e.EMP_ID = #{empId}
+    </select>
+
+    <update id="updateLastLogin">
+        UPDATE EMPLOYEE
+        SET LAST_LOGIN_TIME = CURRENT_TIMESTAMP,
+            LAST_LOGIN_IP   = #{lastLoginIp},
+            UPDATED_AT      = CURRENT_TIMESTAMP
+        WHERE EMP_ID = #{empId}
+    </update>
+
     <select id="selectEmployees" resultType="com.example.sms.vo.system.EmployeeVO">
-        SELECT 
-            e.EMP_ID, e.DEP_ID, d.DEP_NM, e.EMP_NM, e.EMP_LEV, e.REG_DTTM, e.MAX_SEND_CNT,
-            e.PERM_CPN, e.PERM_SYS, e.PERM_STA, e.NOW_SEND_CNT, e.LAST_SEND_DT,
-            e.LOGIN_FAIL_CNT, e.EMP_PHONE, e.PERM_PSN, e.PERM_AUT, e.PERM_CPN_AGREE,
-            e.DEL_DTTM, e.ACT_YN, e.LAST_LOGIN_DTTM, e.PASS_UPDATE_DTTM, e.PASS_UPDATE_YN,
-            e.PERM_SND_CANCEL, e.UPDATE_DTTM, e.PERM_NOM, e.PERM_NOM_AGREE,
-            e.PERM_MMS, e.PERM_MMS_AGREE, e.MFA_YN
-        FROM SMS.EMP e
-        LEFT JOIN SMS.DEP d ON e.DEP_ID = d.DEP_ID
+        SELECT
+            e.EMP_ID, e.EMP_NAME, e.DEPT_ID, d.DEPT_NM, e.USE_YN, e.USER_ROLE,
+            e.AUTH_READ, e.AUTH_APPROVE, e.AUTH_CAMPAIGN,
+            e.LAST_LOGIN_IP, e.LAST_LOGIN_TIME, e.CREATED_AT, e.UPDATED_AT
+        FROM EMPLOYEE e
+        LEFT JOIN TB_DEPT d ON e.DEPT_ID = d.DEPT_ID
         <include refid="employeeSearchConditions"/>
-        ORDER BY e.REG_DTTM DESC
+        ORDER BY e.CREATED_AT DESC, e.EMP_ID DESC
         OFFSET #{offset} ROWS FETCH NEXT #{size} ROWS ONLY
     </select>
 
     <select id="countEmployees" resultType="int">
-        SELECT COUNT(*) 
-        FROM SMS.EMP e
+        SELECT COUNT(*)
+        FROM EMPLOYEE e
         <include refid="employeeSearchConditions"/>
     </select>
 
     <insert id="insertEmployee">
-        INSERT INTO SMS.EMP (
-            EMP_ID, DEP_ID, EMP_NM, EMP_LEV, ACT_YN, REG_DTTM,
-            PERM_SYS, PERM_CPN, PERM_STA
+        INSERT INTO EMPLOYEE (
+            EMP_ID, EMP_NAME, DEPT_ID, USE_YN, USER_ROLE,
+            AUTH_READ, AUTH_APPROVE, AUTH_CAMPAIGN
         ) VALUES (
-            #{empId}, #{depId}, #{empNm}, #{empLev}, #{actYn}, TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS'),
-            #{permSys}, #{permCpn}, #{permSta}
+            #{empId}, #{empName}, #{deptId}, #{useYn}, #{userRole},
+            #{authRead}, #{authApprove}, #{authCampaign}
         )
     </insert>
 

@@ -151,7 +151,39 @@
         .tui-grid-row-odd .tui-grid-cell {
             background-color: #fafbfa !important;
         }
-        
+        /* ── Autocomplete 말풍선 (공통) ── */
+        .autocomplete-wrap { position: relative; display: inline-block; }
+        .autocomplete-balloon {
+            display: none; position: absolute; top: calc(100% + 8px); left: 0;
+            z-index: 1050; min-width: 240px; background: #fff;
+            border: 1px solid #dee2e6; border-radius: 8px;
+            box-shadow: 0 6px 20px rgba(0,0,0,.15); overflow: hidden;
+        }
+        .autocomplete-balloon::before {
+            content: ''; position: absolute; top: -7px; left: 16px;
+            width: 12px; height: 12px; background: #fff;
+            border-left: 1px solid #dee2e6; border-top: 1px solid #dee2e6;
+            transform: rotate(45deg);
+        }
+        .autocomplete-item {
+            padding: 8px 14px; font-size: 13px; cursor: pointer;
+            display: flex; align-items: center; gap: 8px;
+            border-bottom: 1px solid #f1f3f5;
+        }
+        .autocomplete-item:last-child { border-bottom: none; }
+        .autocomplete-item:hover { background: #f8f9fa; }
+        .autocomplete-item:hover .ac-code { color: #0d6efd; }
+        .ac-code { font-weight: 700; color: #495057; font-family: monospace; min-width: 50px; }
+        .ac-name { color: #868e96; font-size: 12px; }
+        .ac-empty { padding: 10px 14px; color: #adb5bd; font-size: 13px; text-align: center; }
+
+        /* Row hover — 전체 행 음영 */
+        .tui-grid-row-hover .tui-grid-cell {
+            background-color: rgba(13, 110, 253, 0.06) !important;
+            cursor: pointer;
+            transition: background-color 0.1s;
+        }
+
         /* 4. 입력창(Input) 디자인 */
         .form-control, .form-select {
             border-radius: 6px;
@@ -193,14 +225,18 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const toggleBtn = document.getElementById('sidebarToggleBtn');
-            const sidebar = document.getElementById('sidebar');
-            
-            // 사이드바 토글 이벤트 (기존 기능 복구)
+            const sidebar   = document.getElementById('sidebar');
+            const iconPath  = document.getElementById('toggleIconPath');
+
+            const ICON_COLLAPSE = 'M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z'; // ◀
+            const ICON_EXPAND   = 'M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z';  // ▶
+
             if (toggleBtn && sidebar) {
                 toggleBtn.addEventListener('click', function () {
                     sidebar.classList.toggle('collapsed');
-                    
-                    // TUI Grid 등 렌더링 갱신
+                    const isCollapsed = sidebar.classList.contains('collapsed');
+                    if (iconPath) iconPath.setAttribute('d', isCollapsed ? ICON_EXPAND : ICON_COLLAPSE);
+
                     setTimeout(() => {
                         if (typeof grid !== 'undefined' && grid) grid.refreshLayout();
                         if (typeof contactGrid !== 'undefined' && contactGrid) contactGrid.refreshLayout();

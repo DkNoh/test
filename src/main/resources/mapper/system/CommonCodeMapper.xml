@@ -4,12 +4,34 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.example.sms.mapper.CommonCodeMapper">
+
     <select id="selectActiveDepartments" resultType="com.example.sms.vo.common.CommonCodeVO">
-        SELECT 
-            DEP_ID as code, 
-            DEP_NM as name 
-        FROM DEP 
-        WHERE ACT_YN = 'Y' 
-        ORDER BY DEP_NM ASC
+        SELECT DEPT_ID AS code, DEPT_NM AS name
+        FROM TB_DEPT
+        ORDER BY DEPT_NM ASC
     </select>
+
+    <!-- 업무분류 캐스케이드: 부서별 메세지 목록 -->
+    <select id="selectMessagesByDept" resultType="com.example.sms.vo.common.CommonCodeVO">
+        SELECT MSG_CODE AS code, MSG_TITLE AS name
+        FROM TB_MESSAGE
+        WHERE USE_YN = 'Y'
+        <if test="deptId != null and deptId != ''">
+            AND DEPT_ID = #{deptId}
+        </if>
+        ORDER BY MSG_TITLE ASC
+    </select>
+
+    <!-- 은행코드 검색 — keyword 없으면 전체, 있으면 코드/명 부분 일치 -->
+    <select id="selectBanksByKeyword" resultType="com.example.sms.vo.common.CommonCodeVO">
+        SELECT BANK_CD AS code, BANK_NM AS name
+        FROM TB_BANK
+        WHERE USE_YN = 'Y'
+        <if test="keyword != null and keyword != ''">
+            AND (UPPER(BANK_CD) LIKE UPPER('%' || #{keyword} || '%')
+              OR BANK_NM              LIKE '%' || #{keyword} || '%')
+        </if>
+        ORDER BY BANK_CD ASC
+    </select>
+
 </mapper>

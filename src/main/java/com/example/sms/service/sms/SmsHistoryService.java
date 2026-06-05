@@ -2,8 +2,8 @@ package com.example.sms.service.sms;
 
 import com.example.sms.dto.common.PageResponseDTO;
 import com.example.sms.dto.sms.SmsHistorySearchRequestDTO;
-import com.example.sms.vo.sms.SmsHistoryVO;
 import com.example.sms.mapper.sms.SmsHistoryMapper;
+import com.example.sms.vo.sms.SmsHistoryVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,13 +23,8 @@ public class SmsHistoryService {
     }
 
     @Transactional
-    public void save(SmsHistoryVO vo) {
-        // TODO: 신규/수정 분기 로직 구현
-        mapper.insert(vo);
-    }
+    public void save(SmsHistoryVO vo) { mapper.insert(vo); }
 
     @Transactional
-    public void delete(String id) {
-        mapper.delete(id);
-    }
+    public void delete(Long id) { mapper.delete(id); }
 }

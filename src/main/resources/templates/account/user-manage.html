@@ -24,10 +24,10 @@
             <div class="row align-items-center g-3">
                 
                 <div class="col-auto">
-                    <label for="depId" class="col-form-label fw-bold">부서코드</label>
+                    <label for="deptId" class="col-form-label fw-bold">부서코드</label>
                 </div>
                 <div class="col-md-2">
-                    <input type="text" id="depId" class="form-control" placeholder="부서코드 입력">
+                    <input type="text" id="deptId" class="form-control" placeholder="부서코드 입력">
                 </div>
 
                 <div class="col-auto d-none d-lg-block">
@@ -35,10 +35,10 @@
                 </div>
 
                 <div class="col-auto">
-                    <label for="empNm" class="col-form-label fw-bold">사용자명</label>
+                    <label for="empName" class="col-form-label fw-bold">사용자명</label>
                 </div>
                 <div class="col-md-2">
-                    <input type="text" id="empNm" class="form-control" placeholder="사용자명 입력">
+                    <input type="text" id="empName" class="form-control" placeholder="사용자명 입력">
                 </div>
 
                 <div class="col-auto d-none d-xl-block">
@@ -89,7 +89,7 @@
         </div>
     </div>
 
-    <!-- 계정 생성 모달 (최신 SMS.EMP 스키마 매핑) -->
+    <!-- 계정 생성 모달 -->
     <div class="modal-overlay" id="createModal" onclick="CommonUtils.closeModalOnOverlay(event)" style="display:none;">
         <div class="modal-box card border-0 shadow-lg" style="width: 500px; border-radius: 12px;">
             <div class="modal-header bg-light border-bottom px-4 py-3 d-flex justify-content-between align-items-center">
@@ -113,40 +113,39 @@
                         <tr>
                             <th class="text-muted fw-bold">사용자명</th>
                             <td>
-                                <input type="text" id="c-empNm" class="form-control" placeholder="이름 입력">
+                                <input type="text" id="c-empName" class="form-control" placeholder="이름 입력">
                             </td>
                         </tr>
                         <tr>
                             <th class="text-muted fw-bold">부서코드</th>
                             <td>
-                                <input type="text" id="c-depId" class="form-control" placeholder="부서코드 입력">
+                                <input type="text" id="c-deptId" class="form-control" placeholder="부서코드 입력">
                             </td>
                         </tr>
                         <tr>
-                            <th class="text-muted fw-bold">사원등급</th>
+                            <th class="text-muted fw-bold">역할</th>
                             <td>
-                                <select id="c-empLev" class="form-select">
-                                    <option value="1">일반사용자 (1)</option>
-                                    <option value="2">부서관리자 (2)</option>
-                                    <option value="9">시스템관리자 (9)</option>
+                                <select id="c-userRole" class="form-select">
+                                    <option value="ROLE_USER">일반사용자</option>
+                                    <option value="ROLE_ADMIN">시스템관리자</option>
                                 </select>
                             </td>
                         </tr>
                         <tr>
-                            <th class="text-muted fw-bold">기능권한</th>
+                            <th class="text-muted fw-bold">권한</th>
                             <td>
                                 <div class="d-flex gap-3 mt-1">
                                     <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="c-permSys">
-                                        <label class="form-check-label" for="c-permSys">시스템</label>
+                                        <input class="form-check-input" type="checkbox" id="c-authRead" checked>
+                                        <label class="form-check-label" for="c-authRead">조회</label>
                                     </div>
                                     <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="c-permCpn">
-                                        <label class="form-check-label" for="c-permCpn">캠페인</label>
+                                        <input class="form-check-input" type="checkbox" id="c-authApprove">
+                                        <label class="form-check-label" for="c-authApprove">승인</label>
                                     </div>
                                     <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="c-permSta">
-                                        <label class="form-check-label" for="c-permSta">통계</label>
+                                        <input class="form-check-input" type="checkbox" id="c-authCampaign">
+                                        <label class="form-check-label" for="c-authCampaign">캠페인</label>
                                     </div>
                                 </div>
                             </td>
@@ -156,12 +155,12 @@
                             <td>
                                 <div class="d-flex gap-3 mt-1">
                                     <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="c-actYn" id="actYn-Y" value="Y" checked>
-                                        <label class="form-check-label" for="actYn-Y">사용</label>
+                                        <input class="form-check-input" type="radio" name="c-useYn" id="useYn-Y" value="Y" checked>
+                                        <label class="form-check-label" for="useYn-Y">사용</label>
                                     </div>
                                     <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="c-actYn" id="actYn-N" value="N">
-                                        <label class="form-check-label" for="actYn-N">미사용</label>
+                                        <input class="form-check-input" type="radio" name="c-useYn" id="useYn-N" value="N">
+                                        <label class="form-check-label" for="useYn-N">미사용</label>
                                     </div>
                                 </div>
                             </td>

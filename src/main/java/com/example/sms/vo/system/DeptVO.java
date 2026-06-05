@@ -4,7 +4,7 @@ import lombok.Data;
 
 @Data
 public class DeptVO {
-    private String depId;
+    private String deptId;
     private String depNm;
     private String wrtDttm;
     private String delDttm;

@@ -4,8 +4,8 @@
 
     <sql id="deptSearchConditions">
         <where>
-            <if test="depId != null and depId != ''">
-                AND DEP_ID LIKE '%' || #{depId} || '%'
+            <if test="deptId != null and deptId != ''">
+                AND DEPT_ID LIKE '%' || #{deptId} || '%'
             </if>
             <if test="depNm != null and depNm != ''">
                 AND DEP_NM LIKE '%' || #{depNm} || '%'
@@ -15,8 +15,8 @@
 
     <select id="selectDepts" resultType="com.example.sms.vo.system.DeptVO">
         SELECT 
-            DEP_ID, DEP_NM, WRT_DTTM, DEL_DTTM, ACT_YN
-        FROM SMS.DEP
+            DEPT_ID, DEP_NM, WRT_DTTM, DEL_DTTM, ACT_YN
+        FROM TB_DEP
         <include refid="deptSearchConditions"/>
         ORDER BY WRT_DTTM DESC
         OFFSET #{offset} ROWS FETCH NEXT #{size} ROWS ONLY
@@ -24,29 +24,29 @@
 
     <select id="countDepts" resultType="int">
         SELECT COUNT(*) 
-        FROM SMS.DEP
+        FROM TB_DEP
         <include refid="deptSearchConditions"/>
     </select>
 
     <select id="findById" resultType="com.example.sms.vo.system.DeptVO">
-        SELECT DEP_ID, DEP_NM, WRT_DTTM, DEL_DTTM, ACT_YN
-        FROM SMS.DEP
-        WHERE DEP_ID = #{depId}
+        SELECT DEPT_ID, DEP_NM, WRT_DTTM, DEL_DTTM, ACT_YN
+        FROM TB_DEP
+        WHERE DEPT_ID = #{deptId}
     </select>
 
     <insert id="insertDept">
-        INSERT INTO SMS.DEP (
-            DEP_ID, DEP_NM, ACT_YN, WRT_DTTM
+        INSERT INTO TB_DEP (
+            DEPT_ID, DEP_NM, ACT_YN, WRT_DTTM
         ) VALUES (
-            #{depId}, #{depNm}, #{actYn}, TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+            #{deptId}, #{depNm}, #{actYn}, TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
         )
     </insert>
 
     <update id="updateDept">
-        UPDATE SMS.DEP
+        UPDATE TB_DEP
         SET DEP_NM = #{depNm},
             ACT_YN = #{actYn}
-        WHERE DEP_ID = #{depId}
+        WHERE DEPT_ID = #{deptId}
     </update>
 
 </mapper>

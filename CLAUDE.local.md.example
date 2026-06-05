@@ -1,0 +1,6 @@
+# 개인 전용 메모 — 이 파일을 CLAUDE.local.md 로 복사해서 사용 (.gitignore 대상, 커밋 금지)
+# DB 비밀번호·접속정보 등 비밀은 여기에만 둔다.
+
+# 예) 로컬 dev DB
+# - URL: jdbc:oracle:thin:@localhost:1521/XEPDB1
+# - 계정: (로컬에만 기록)

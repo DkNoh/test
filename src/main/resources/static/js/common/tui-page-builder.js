@@ -212,8 +212,15 @@ class TuiPageBuilder {
         // 사용자가 config에 등록한 searchInputs 배열을 순회하며 검색 조건 값을 추출해 파라미터에 추가합니다.
         this.config.searchInputs.forEach(id => {
             const el = document.getElementById(id);
-            // 값이 존재하고 빈 문자열이 아닐 경우 파라미터로 전송
-            if (el) params.append(id, el.value);
+            if (!el) return;
+            let value = el.value;
+            // date 입력값 '-' 자동 제거 (DB가 YYYYMMDD 형식일 때 공통 대응)
+            if (el.type === 'date') {
+                value = value.replace(/-/g, '');
+            } else if (el.type === 'datetime-local') {
+                value = value.replace(/-/g, '').replace('T', '').replace(/:/g, '');
+            }
+            params.append(id, value);
         });
 
         // 2. 서버 연동 (Fetch API)

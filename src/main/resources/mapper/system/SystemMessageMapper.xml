@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.sms.mapper.system.SystemMessageMapper">
+
+    <sql id="searchConditions">
+        <where>
+            <if test="msgType != null and msgType != ''">
+                AND m.MSG_TYPE = #{msgType}
+            </if>
+            <if test="deptId != null and deptId != ''">
+                AND m.DEPT_ID = #{deptId}
+            </if>
+            <if test="msgCode != null and msgCode != ''">
+                AND m.MSG_CODE LIKE '%' || #{msgCode} || '%'
+            </if>
+            <if test="deptNm != null and deptNm != ''">
+                AND d.DEPT_NM LIKE '%' || #{deptNm} || '%'
+            </if>
+            <if test="msgTitle != null and msgTitle != ''">
+                AND m.MSG_TITLE LIKE '%' || #{msgTitle} || '%'
+            </if>
+        </where>
+    </sql>
+
+    <select id="count" resultType="int">
+        SELECT COUNT(1)
+        FROM TB_MESSAGE m
+        LEFT JOIN TB_DEPT d ON m.DEPT_ID = d.DEPT_ID
+        <include refid="searchConditions"/>
+    </select>
+
+    <select id="selectList" resultType="com.example.sms.vo.system.SystemMessageVO">
+        SELECT
+            m.MSG_ID,
+            m.DEPT_ID,
+            d.DEPT_NM,
+            m.MSG_CODE,
+            m.MSG_TYPE,
+            m.MSG_TITLE,
+            m.MSG_CONTENT,
+            m.FORBID_YN,
+            m.SEND_POINT,
+            m.USE_YN,
+            m.REG_ID,
+            m.REG_DT,
+            m.UPD_ID,
+            m.UPD_DT
+        FROM TB_MESSAGE m
+        LEFT JOIN TB_DEPT d ON m.DEPT_ID = d.DEPT_ID
+        <include refid="searchConditions"/>
+        ORDER BY m.REG_DT DESC, m.MSG_ID DESC
+        OFFSET #{offset} ROWS FETCH NEXT #{size} ROWS ONLY
+    </select>
+
+</mapper>

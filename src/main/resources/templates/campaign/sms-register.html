@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{defaultLayout}">
+<head><title>SMS 등록</title></head>
+<body>
+<main layout:fragment="content">
+
+    <div class="content-header">
+        <h2>SMS 등록 <small style="color:#888;font-size:14px;margin-left:10px;">(캠페인 SMS &gt; SMS등록)</small></h2>
+    </div>
+
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body px-4 py-4">
+            <table class="table table-borderless table-sm align-middle mb-0">
+                <colgroup><col style="width:140px;"><col></colgroup>
+                <tbody>
+                    <tr>
+                        <th class="text-muted fw-bold">캠페인명 <span class="text-danger">*</span></th>
+                        <td><input type="text" id="campaignName" class="form-control" placeholder="캠페인 이름 입력"></td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted fw-bold">발신번호 <span class="text-danger">*</span></th>
+                        <td><input type="text" id="senderNo" class="form-control" placeholder="예) 0212345678"></td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted fw-bold">수신번호 <span class="text-danger">*</span></th>
+                        <td>
+                            <textarea id="receiverNos" class="form-control" rows="4" placeholder="수신번호를 줄바꿈으로 구분하여 입력&#10;예)&#10;010-1234-5678&#10;010-9876-5432"></textarea>
+                            <small class="text-muted">줄바꿈(Enter)으로 구분, 대상수는 자동 집계</small>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted fw-bold">메세지 내용 <span class="text-danger">*</span></th>
+                        <td>
+                            <textarea id="msgContent" class="form-control" rows="5" maxlength="90" placeholder="SMS 내용 입력 (최대 90자)"></textarea>
+                            <small class="text-muted"><span id="charCount">0</span>/90자</small>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted fw-bold">예약발송일시</th>
+                        <td><input type="datetime-local" id="reservedAt" class="form-control" style="width:200px;"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer bg-light border-top px-4 py-3 d-flex gap-2">
+            <button type="button" id="btn-submit" class="btn btn-primary px-4">승인 요청</button>
+            <button type="button" onclick="history.back()" class="btn btn-secondary px-4">취소</button>
+        </div>
+    </div>
+
+</main>
+<th:block layout:fragment="script">
+    <script th:src="@{/js/campaign/sms-register.js}"></script>
+</th:block>
+</body>
+</html>

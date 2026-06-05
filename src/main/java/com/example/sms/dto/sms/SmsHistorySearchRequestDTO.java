@@ -7,8 +7,9 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class SmsHistorySearchRequestDTO extends PageRequestDTO {
-    private String startDate;
-    private String endDate;
+    private String startDateTime;
+    private String endDateTime;
+    private String sendStatus;
     private String receiverNo;
     private String sendType;
 }

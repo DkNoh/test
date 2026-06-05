@@ -12,5 +12,5 @@ public interface DeptMapper {
     int countDepts(DeptSearchRequestDTO request);
     void insertDept(DeptVO dept);
     void updateDept(DeptVO dept);
-    DeptVO findById(String depId);
+    DeptVO findById(String deptId);
 }

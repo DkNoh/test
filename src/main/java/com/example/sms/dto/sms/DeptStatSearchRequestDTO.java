@@ -7,7 +7,5 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class DeptStatSearchRequestDTO extends PageRequestDTO {
-    private String startDate;
-    private String endDate;
-    private String deptNm;
+    private String searchDate; // 조회일자 (yyyy-MM-dd) 단일 날짜
 }

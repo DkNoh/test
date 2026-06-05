@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.sms.mapper.sms.SmsCustomerSsnMapper">
+
+    <select id="count" resultType="int">
+        SELECT COUNT(1) FROM TB_CUSTOMER_SSN
+        <where>
+            <if test="receiverNo != null and receiverNo != ''">AND PHONE_NO LIKE '%' || #{receiverNo} || '%'</if>
+        </where>
+    </select>
+
+    <select id="selectList" resultType="com.example.sms.vo.sms.SmsCustomerSsnVO">
+        SELECT PHONE_NO AS phoneNo, SSN_MASKED AS ssnMasked,
+               HOLDER_NAME AS holderName, DEPT_NM AS deptNm, INTERMEDIARY AS intermediary
+        FROM TB_CUSTOMER_SSN
+        <where>
+            <if test="receiverNo != null and receiverNo != ''">AND PHONE_NO LIKE '%' || #{receiverNo} || '%'</if>
+        </where>
+        ORDER BY PHONE_NO
+    </select>
+
+</mapper>

@@ -124,9 +124,9 @@ function bindEvents() {
             })
             .then(res => res.json())
             .then(res => {
-                if(res.result) {
-                    alert('삭제 완료되었습니다.');
-                    searchData(); // 재조회
+                if (res.code === 200) {
+                    alert(res.message || '삭제 완료되었습니다.');
+                    searchData();
                 }
             });
         }

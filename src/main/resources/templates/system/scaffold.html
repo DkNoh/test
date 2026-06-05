@@ -11,32 +11,63 @@
             background: #fff;
             padding: 30px;
             border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display:block; font-weight:600; margin-bottom:8px; color:#333; }
+        .form-group input { width:100%; padding:10px; border:1px solid #ddd; border-radius:4px; font-size:14px; }
+        .form-help { font-size:12px; color:#888; margin-top:4px; }
+
+        /* ── 코드 블록 ── */
+        .code-block {
+            background: #343a40;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .code-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 14px;
+            background: #2b3035;
+            border-bottom: 1px solid #495057;
+        }
+        .code-filename {
+            color: #ffc107;
+            font-weight: 700;
+            font-size: 13px;
+            font-family: monospace;
         }
 
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: #333;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
+        /* ── 복사 버튼 ── */
+        .btn-copy {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: #495057;
+            color: #dee2e6;
+            border: none;
             border-radius: 4px;
-            font-size: 14px;
-        }
-
-        .form-help {
+            padding: 4px 10px;
             font-size: 12px;
-            color: #888;
-            margin-top: 4px;
+            cursor: pointer;
+            transition: background .15s, color .15s;
+            white-space: nowrap;
+        }
+        .btn-copy:hover { background: #6c757d; color: #fff; }
+        .btn-copy.copied { background: #198754; color: #fff; }
+        .btn-copy svg { flex-shrink: 0; }
+
+        .code-body {
+            margin: 0;
+            padding: 14px;
+            color: #e9ecef;
+            font-family: monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 400px;
+            overflow-y: auto;
         }
     </style>
 </head>
@@ -44,9 +75,9 @@
 <body>
     <main layout:fragment="content">
 
-        <div class="content-header" style="text-align: center; margin-bottom: 10px;">
+        <div class="content-header" style="text-align:center; margin-bottom:10px;">
             <h2>🚀 코드 자동 생성기 (Scaffolding Tool)</h2>
-            <p style="color: #666; font-size: 14px;">화면 생성에 필요한 프론트/백엔드 보일러플레이트 코드 8종을 즉시 생성합니다.</p>
+            <p style="color:#666; font-size:14px;">화면 생성에 필요한 프론트/백엔드 보일러플레이트 코드를 즉시 생성합니다.</p>
         </div>
 
         <div class="scaffold-form-wrap">
@@ -55,154 +86,183 @@
                 <input type="text" id="moduleName" placeholder="예: system, campaign, stat" value="system">
                 <div class="form-help">Java 패키지명 및 화면 URL의 첫 번째 경로로 사용됩니다. (소문자)</div>
             </div>
-
             <div class="form-group">
                 <label for="domainId">2. 도메인 ID (화면 식별자)</label>
                 <input type="text" id="domainId" placeholder="예: dept-stats, history-detail, report" value="demo">
-                <div class="form-help">HTML 및 JS 파일명, 그리고 URL의 두 번째 경로로 사용됩니다. (소문자)</div>
+                <div class="form-help">HTML·JS 파일명, URL 두 번째 경로로 사용됩니다. (소문자, 하이픈 허용)</div>
             </div>
-
             <div class="form-group">
-                <label for="domainClass">3. 클래스 명 (논리적 화면/기능명)</label>
-                <input type="text" id="domainClass" placeholder="예: DeptStats, HistoryDetail, StatReport" value="Demo">
-                <div class="form-help">DTO, VO, Mapper, Service, Controller 생성 시 접두사로 사용됩니다. 물리적 테이블명이 아닌 '화면 단위'로 지어주세요! (PascalCase)</div>
+                <label for="domainClass">3. 클래스명 (논리 화면명)</label>
+                <input type="text" id="domainClass" placeholder="예: DeptStats, HistoryDetail" value="Demo">
+                <div class="form-help">DTO·VO·Mapper·Service·Controller 접두사. <strong>기능명만</strong> 입력 (Search 제외). (PascalCase)</div>
             </div>
-
             <div class="form-group">
                 <label for="domainName">4. 화면 타이틀 (메뉴명)</label>
-                <input type="text" id="domainName" placeholder="예: 부서별 발송 통계, 발송 상세 내역" value="데모 화면">
-                <div class="form-help">HTML 타이틀 및 모달, 주석 등에 표기될 한글 명칭입니다.</div>
+                <input type="text" id="domainName" placeholder="예: 부서별 발송 통계" value="데모 화면">
+                <div class="form-help">HTML 타이틀·메뉴에 표기될 한글명</div>
             </div>
-
             <div class="form-group">
                 <label for="rawQuery">5. 데이터 조회 쿼리 (SELECT 문)</label>
-                <textarea id="rawQuery" rows="6" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:4px; font-family:monospace;" 
-                          placeholder="예시:&#10;SELECT &#10;  A.EMP_ID, &#10;  A.EMP_NAME, &#10;  B.DEPT_NM &#10;FROM TB_EMP A &#10;JOIN TB_DEPT B ON A.DEPT_ID = B.DEPT_ID"></textarea>
-                <div class="form-help">실제 사용할 SELECT 쿼리를 통째로 붙여넣으세요. 엔진이 자동으로 컬럼을 추출해 VO/JS를 매핑하고 XML에 쿼리를 심어줍니다!</div>
+                <textarea id="rawQuery" rows="6" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:4px; font-family:monospace;"
+                          placeholder="SELECT&#10;  A.EMP_ID, A.EMP_NAME&#10;FROM TB_EMP A&#10;WHERE $searchKeyword"></textarea>
+                <div class="form-help">$var 형식으로 검색조건 표시. 쿼리에서 컬럼·타입을 자동 추출합니다.</div>
             </div>
-
             <div class="form-group" style="display:flex; align-items:center; gap:8px;">
                 <input type="checkbox" id="includeCud" style="width:auto; transform:scale(1.2);">
-                <label for="includeCud" style="margin:0; cursor:pointer;">[고급] 등록/수정/삭제 (CUD) 처리용 Service/Controller 템플릿 포함 생성</label>
+                <label for="includeCud" style="margin:0; cursor:pointer;">[고급] 등록/수정/삭제 (CUD) 템플릿 포함</label>
             </div>
-
             <div class="form-group" style="display:flex; align-items:center; gap:8px; margin-top:-10px;">
                 <input type="checkbox" id="includeExcel" style="width:auto; transform:scale(1.2);" checked>
-                <label for="includeExcel" style="margin:0; cursor:pointer;">[필수] 대용량 엑셀 다운로드 (ExcelUtil 연동 Backend) 템플릿 포함 생성</label>
+                <label for="includeExcel" style="margin:0; cursor:pointer;">[필수] 대용량 엑셀 다운로드 (ExcelUtil Backend) 포함</label>
             </div>
-
             <div class="form-group" style="display:flex; align-items:center; gap:8px; margin-top:-10px;">
                 <input type="checkbox" id="includeExcelGrid" style="width:auto; transform:scale(1.2);" checked>
-                <label for="includeExcelGrid" style="margin:0; cursor:pointer;">[필수] 현재 화면 엑셀 다운로드 (TUI Grid Native) 버튼 포함 생성</label>
+                <label for="includeExcelGrid" style="margin:0; cursor:pointer;">[필수] 화면 엑셀 다운로드 (TUI Grid Native) 버튼 포함</label>
             </div>
 
-            <div style="text-align: center; margin-top: 30px; display:flex; justify-content:center; gap:10px;">
-                <button type="button" class="btn btn-primary" style="padding: 12px 30px; font-size: 16px;"
+            <div style="text-align:center; margin-top:30px; display:flex; justify-content:center; gap:10px;">
+                <button type="button" class="btn btn-primary" style="padding:12px 30px; font-size:16px;"
                     onclick="generateCode()">
                     ⚡ 쿼리 기반 화면 템플릿 생성하기
                 </button>
-                <button type="button" class="btn btn-success" style="padding: 12px 30px; font-size: 16px;"
+                <button type="button" class="btn btn-success" style="padding:12px 30px; font-size:16px;"
                     onclick="generateSnippet()">
                     📄 기존 화면에 엑셀(Snippet) 추가하기
                 </button>
             </div>
         </div>
 
-        <div id="snippetResult" style="display:none; margin-top:20px; background:#212529; color:#f8f9fa; padding:20px; border-radius:8px;">
-            <h4 id="resultTitle" style="margin-bottom:15px; color:#20c997;">✅ 코드가 생성되었습니다! 탭을 확인하여 복사+붙여넣기 하세요.</h4>
-            <div id="snippetBoxes" style="display:flex; flex-direction:column; gap:15px;"></div>
+        <!-- 결과 영역 -->
+        <div id="snippetResult" style="display:none; margin-top:20px; background:#212529; padding:20px; border-radius:8px;">
+            <h4 id="resultTitle" style="margin-bottom:15px; color:#20c997;"></h4>
+            <div id="snippetBoxes" style="display:flex; flex-direction:column; gap:12px;"></div>
         </div>
 
     </main>
 
     <th:block layout:fragment="script">
         <script>
+            // ── 복사 아이콘 SVG ──────────────────────────────
+            const ICON_COPY = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+            </svg>`;
+            const ICON_CHECK = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+            </svg>`;
+
+            // ── 코드 블록 렌더링 ─────────────────────────────
+            function renderResults(data, title) {
+                document.getElementById('resultTitle').textContent = title;
+                const container = document.getElementById('snippetBoxes');
+                container.innerHTML = '';
+
+                for (const [filename, code] of Object.entries(data)) {
+                    const block = document.createElement('div');
+                    block.className = 'code-block';
+
+                    // 헤더 (파일명 + 복사 버튼)
+                    const header = document.createElement('div');
+                    header.className = 'code-header';
+
+                    const nameSpan = document.createElement('span');
+                    nameSpan.className = 'code-filename';
+                    nameSpan.textContent = filename;
+
+                    const copyBtn = document.createElement('button');
+                    copyBtn.className = 'btn-copy';
+                    copyBtn.innerHTML = ICON_COPY + ' 복사';
+                    copyBtn.addEventListener('click', () => {
+                        navigator.clipboard.writeText(pre.textContent)
+                            .then(() => {
+                                copyBtn.classList.add('copied');
+                                copyBtn.innerHTML = ICON_CHECK + ' 복사됨!';
+                                setTimeout(() => {
+                                    copyBtn.classList.remove('copied');
+                                    copyBtn.innerHTML = ICON_COPY + ' 복사';
+                                }, 2000);
+                            })
+                            .catch(() => {
+                                // fallback: execCommand
+                                const ta = document.createElement('textarea');
+                                ta.value = pre.textContent;
+                                document.body.appendChild(ta);
+                                ta.select();
+                                document.execCommand('copy');
+                                document.body.removeChild(ta);
+                                copyBtn.innerHTML = ICON_CHECK + ' 복사됨!';
+                                setTimeout(() => { copyBtn.innerHTML = ICON_COPY + ' 복사'; }, 2000);
+                            });
+                    });
+
+                    header.appendChild(nameSpan);
+                    header.appendChild(copyBtn);
+
+                    // 코드 본문
+                    const pre = document.createElement('pre');
+                    pre.className = 'code-body';
+                    pre.textContent = code; // textContent → HTML 이스케이프 자동 처리
+
+                    block.appendChild(header);
+                    block.appendChild(pre);
+                    container.appendChild(block);
+                }
+
+                document.getElementById('snippetResult').style.display = 'block';
+                window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+            }
+
+            // ── 화면 세트 생성 ────────────────────────────────
             function generateCode() {
                 const param = {
-                    moduleName: document.getElementById('moduleName').value.trim(),
-                    domainId: document.getElementById('domainId').value.trim(),
-                    domainClass: document.getElementById('domainClass').value.trim(),
-                    domainName: document.getElementById('domainName').value.trim(),
-                    rawQuery: document.getElementById('rawQuery').value.trim(),
-                    includeCud: document.getElementById('includeCud').checked,
-                    includeExcel: document.getElementById('includeExcel').checked,
-                    includeExcelGrid: document.getElementById('includeExcelGrid').checked
+                    moduleName:      document.querySelector('#moduleName').value.trim(),
+                    domainId:        document.querySelector('#domainId').value.trim(),
+                    domainClass:     document.querySelector('#domainClass').value.trim(),
+                    domainName:      document.querySelector('#domainName').value.trim(),
+                    rawQuery:        document.querySelector('#rawQuery').value.trim(),
+                    includeCud:      document.querySelector('#includeCud').checked,
+                    includeExcel:    document.querySelector('#includeExcel').checked,
+                    includeExcelGrid:document.querySelector('#includeExcelGrid').checked
                 };
 
                 if (!param.moduleName || !param.domainId || !param.domainClass || !param.domainName) {
-                    alert("1~4번 입력란을 모두 채워주세요.");
+                    alert('1~4번 입력란을 모두 채워주세요.');
                     return;
                 }
-
-                if (!confirm(`[${param.domainName}] 화면을 위한 코드를 생성하시겠습니까?\n생성된 코드는 화면 아래에 탭 형태로 출력됩니다.`)) {
-                    return;
-                }
+                if (!confirm(`[${param.domainName}] 화면 코드를 생성하시겠습니까?`)) return;
 
                 axios.post('/system/scaffold/generate', param)
                     .then(res => {
-                        const data = res.data;
-                        document.getElementById('resultTitle').textContent = "✅ 완벽한 화면 세트가 생성되었습니다! 각 파일에 복사+붙여넣기 하세요.";
-                        const container = document.getElementById('snippetBoxes');
-                        container.innerHTML = '';
-                        
-                        for (const [key, code] of Object.entries(data)) {
-                            container.innerHTML += `
-                                <div style="background:#343a40; padding:10px; border-radius:4px;">
-                                    <div style="color:#ffc107; font-weight:bold; margin-bottom:8px;">[${key}]</div>
-                                    <pre style="margin:0; color:#e9ecef; font-family:monospace; white-space:pre-wrap;">${code.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
-                                </div>
-                            `;
-                        }
-                        
-                        document.getElementById('snippetResult').style.display = 'block';
-                        window.scrollTo(0, document.body.scrollHeight);
-                        alert("코드가 브라우저 화면 하단에 생성되었습니다!");
+                        renderResults(res.data.data,
+                            '✅ 파일 세트가 생성되었습니다! 각 파일명을 확인 후 복사하세요.');
                     })
                     .catch(err => {
-                        const msg = err.response?.data?.message || err.message;
-                        alert("코드 생성 실패: " + msg);
+                        alert('코드 생성 실패: ' + (err.response?.data?.message || err.message));
                     });
             }
 
+            // ── 엑셀 스니펫 생성 ─────────────────────────────
             function generateSnippet() {
                 const param = {
-                    moduleName: document.getElementById('moduleName').value.trim(),
-                    domainClass: document.getElementById('domainClass').value.trim(),
-                    rawQuery: document.getElementById('rawQuery').value.trim()
+                    moduleName:  document.querySelector('#moduleName').value.trim(),
+                    domainClass: document.querySelector('#domainClass').value.trim(),
+                    rawQuery:    document.querySelector('#rawQuery').value.trim()
                 };
 
                 if (!param.moduleName || !param.domainClass || !param.rawQuery) {
-                    alert("모듈명, 클래스명, 쿼리를 입력해주세요.");
+                    alert('모듈명, 클래스명, 쿼리를 입력해주세요.');
                     return;
                 }
 
                 axios.post('/system/scaffold/generate-excel-snippet', param)
                     .then(res => {
-                        const data = res.data;
-                        document.getElementById('resultTitle').textContent = "✅ 엑셀 스니펫이 생성되었습니다! 기존 소스코드에 복사+붙여넣기 하세요.";
-                        const container = document.getElementById('snippetBoxes');
-                        container.innerHTML = '';
-                        
-                        for (const [key, code] of Object.entries(data)) {
-                            container.innerHTML += `
-                                <div style="background:#343a40; padding:10px; border-radius:4px;">
-                                    <div style="color:#ffc107; font-weight:bold; margin-bottom:8px;">[${key}]</div>
-                                    <pre style="margin:0; color:#e9ecef; font-family:monospace; white-space:pre-wrap;">${code.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
-                                </div>
-                            `;
-                        }
-                        
-                        document.getElementById('snippetResult').style.display = 'block';
-                        // 스크롤 맨 아래로
-                        window.scrollTo(0, document.body.scrollHeight);
+                        renderResults(res.data.data,
+                            '✅ 엑셀 스니펫 생성 완료! 기존 소스에 복사+붙여넣기 하세요.');
                     })
                     .catch(err => {
-                        const msg = err.response?.data?.message || err.message;
-                        alert("스니펫 생성 실패: " + msg);
+                        alert('스니펫 생성 실패: ' + (err.response?.data?.message || err.message));
                     });
             }
         </script>
     </th:block>
 </body>
-
 </html>

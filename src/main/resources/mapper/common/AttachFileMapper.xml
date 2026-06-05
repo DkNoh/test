@@ -4,7 +4,7 @@
 <mapper namespace="com.example.sms.mapper.AttachFileMapper">
 
     <insert id="insertAttachFile" parameterType="com.example.sms.vo.common.AttachFileVO" useGeneratedKeys="true" keyProperty="fileId" keyColumn="file_id">
-        INSERT INTO attach_file (
+        INSERT INTO TB_ATTACH_FILE (
             original_name,
             save_name,
             file_path,
@@ -27,7 +27,7 @@
                file_size as fileSize,
                ext,
                created_at as createdAt
-        FROM attach_file
+        FROM TB_ATTACH_FILE
         WHERE file_id = #{fileId}
     </select>
 

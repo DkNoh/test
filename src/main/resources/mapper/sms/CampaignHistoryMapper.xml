@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.sms.mapper.sms.CampaignHistoryMapper">
+
+    <!--
+        캠페인별 발송내역 — CAMPAIGN 테이블 기준, SMS_HISTORY에서 캠페인명 매칭으로 건수 집계.
+        TODO: CAMPAIGN ↔ SMS_HISTORY 연결 PK 확인 후 JOIN 조건 교체.
+    -->
+
+    <sql id="searchConditions">
+        <where>
+            <if test="sendType != null and sendType != ''">
+                AND c.SEND_TYPE = #{sendType}
+            </if>
+            <if test="startDate != null and startDate != ''">
+                AND c.REG_DT &gt;= TO_DATE(#{startDate}, 'YYYY-MM-DD')
+            </if>
+            <if test="endDate != null and endDate != ''">
+                AND c.REG_DT &lt; TO_DATE(#{endDate}, 'YYYY-MM-DD') + 1
+            </if>
+            <if test="campaignName != null and campaignName != ''">
+                AND c.CAMPAIGN_NAME LIKE '%' || #{campaignName} || '%'
+            </if>
+        </where>
+    </sql>
+
+    <select id="count" resultType="int">
+        SELECT COUNT(1)
+        FROM CAMPAIGN c
+        <include refid="searchConditions"/>
+    </select>
+
+    <select id="selectList" resultType="com.example.sms.vo.sms.CampaignHistoryVO">
+        SELECT
+            c.CAMPAIGN_ID   AS campaignId,
+            c.CAMPAIGN_NAME AS campaignName,
+            NULL            AS regId,
+            c.REG_DT        AS sentAt,
+            NULL            AS message,
+            (SELECT COUNT(1) FROM SMS_HISTORY h WHERE h.CAMPAIGN_NAME = c.CAMPAIGN_NAME) AS sendCount,
+            c.SEND_TYPE     AS sendType,
+            c.STATUS        AS status
+        FROM CAMPAIGN c
+        <include refid="searchConditions"/>
+        ORDER BY c.REG_DT DESC, c.CAMPAIGN_ID DESC
+        OFFSET #{offset} ROWS FETCH NEXT #{size} ROWS ONLY
+    </select>
+
+</mapper>

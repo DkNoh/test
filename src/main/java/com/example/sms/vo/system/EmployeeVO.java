@@ -1,36 +1,22 @@
 package com.example.sms.vo.system;
 
 import lombok.Data;
+import java.time.LocalDateTime;
 
 @Data
 public class EmployeeVO {
     private String empId;
-    private String depId;
-    private String depNm; // From SMS.DEP
-    private String empNm;
-    private String empLev;
-    private String regDttm;
-    private Integer maxSendCnt;
-    private String permCpn;
-    private String permSys;
-    private String permSta;
-    private Integer nowSendCnt;
-    private String lastSendDt;
-    private Integer loginFailCnt;
-    private String empPhone;
-    private String permPsn;
-    private String permAut;
-    private String permCpnAgree;
-    private String delDttm;
-    private String actYn;
-    private String lastLoginDttm;
-    private String passUpdateDttm;
-    private String passUpdateYn;
-    private String permSndCancel;
-    private String updateDttm;
-    private String permNom;
-    private String permNomAgree;
-    private String permMms;
-    private String permMmsAgree;
-    private String mfaYn;
+    private String empName;      // EMP_NAME
+    private String deptId;       // DEPT_ID (FK → TB_DEPT)
+    private String deptNm;       // TB_DEPT.DEPT_NM (JOIN)
+    private String useYn;        // USE_YN
+    private String userRole;     // USER_ROLE (ROLE_ADMIN / ROLE_USER)
+    private String authRead;     // AUTH_READ
+    private String authApprove;  // AUTH_APPROVE
+    private String authCampaign; // AUTH_CAMPAIGN
+    private String lastLoginIp;  // LAST_LOGIN_IP
+    private LocalDateTime lastLoginTime; // LAST_LOGIN_TIME
+    private LocalDateTime createdAt;     // CREATED_AT
+    private LocalDateTime updatedAt;     // UPDATED_AT
+    private String        mfaYn;         // MFA_YN
 }

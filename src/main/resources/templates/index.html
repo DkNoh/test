@@ -11,8 +11,14 @@
     
     <!-- 타이틀 영역 -->
     <div class="row mb-4">
-        <div class="col-12">
+        <div class="col-12 d-flex justify-content-between align-items-center">
             <h4 class="mb-0 fw-bold">대시보드 <span class="text-muted fs-6 ms-2">(Dashboard)</span></h4>
+            <div class="d-flex align-items-center gap-2">
+                <span id="dashboard-last-updated" class="text-muted small"></span>
+                <button id="dashboard-refresh-btn" class="btn btn-sm btn-outline-secondary" title="즉시 갱신">
+                    <span id="refresh-icon">&#x21BB;</span>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -75,18 +81,20 @@
 
     <!-- 2. 중간 영역 (차트 및 통계) -->
     <div class="row g-4 mb-4">
-        
-        <!-- 좌측: 주간 발송 추이 (가짜 Progress Bar 차트) -->
+
+        <!-- 좌측: 주간 발송 추이 (Progress Bar 차트) -->
         <div class="col-lg-8">
             <div class="card shadow-sm border-0 h-100">
                 <div class="card-header bg-white border-bottom-0 py-3 pb-0">
                     <h6 class="mb-0 fw-bold">주간 요일별 발송량 통계</h6>
                 </div>
                 <div class="card-body" id="weekly-trend-container">
-                    
                     <div class="mb-3">
                         <div class="d-flex justify-content-between mb-1">
                             <span class="fw-medium text-muted">로딩중...</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -97,10 +105,12 @@
                     <h6 class="mb-0 fw-bold">채널별 발송 비율</h6>
                 </div>
                 <div class="card-body" id="channel-ratio-container">
-                    
                     <div class="mb-4 mt-2">
                         <div class="d-flex justify-content-between align-items-center mb-1">
                             <span class="fw-bold">로딩중...</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 

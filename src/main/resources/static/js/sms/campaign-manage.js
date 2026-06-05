@@ -1,30 +1,16 @@
-/**
- * campaign-manage.js
- * 데모 화면 화면 스크립트
- */
 document.addEventListener('DOMContentLoaded', function () {
-    const pageBuilder = new TuiPageBuilder({
+    new TuiPageBuilder({
         el: 'grid',
         apiUrl: '/sms/campaign/data',
-        searchInputs: ['SEND_TYPE'],
+        searchInputs: ['startDate', 'endDate', 'campaignName', 'regId'],
         rowHeaders: ['rowNum'],
         columns: [
-            { header: 'CAMPAIGN_ID', name: 'campaignId', align: 'center', width: 150 },
-            { header: 'CAMPAIGN_NAME', name: 'campaignName', align: 'center', width: 150 },
-            { header: 'SEND_TYPE', name: 'sendType', align: 'center', width: 150 },
-            { header: 'STATUS', name: 'status', align: 'center', width: 150 },
-            { header: 'TOTAL_CNT', name: 'totalCnt', align: 'center', width: 150 },
-            { header: 'SUCCESS_CNT', name: 'successCnt', align: 'center', width: 150 },
-            { header: 'FAIL_CNT', name: 'failCnt', align: 'center', width: 150 },
-            { header: 'PENDING_CNT', name: 'pendingCnt', align: 'center', width: 150 },
-            { header: 'SUCCESS_RATE', name: 'successRate', align: 'center', width: 150 }
-        ],
-        autoModal: true,
-        autoModalTitle: '데모 화면 상세'
-    });
-
-    // 신규 등록 버튼 이벤트 예시
-    document.getElementById('btn-create')?.addEventListener('click', () => {
-        alert('신규 등록 팝업 구현');
+            { header: '캠페인명', name: 'campaignName', minWidth: 200, align: 'left' },
+            { header: '등록ID',   name: 'regId',        width: 120,   align: 'center' },
+            { header: '전송일시', name: 'sentAt',        width: 160,   align: 'center' },
+            { header: '내용',     name: 'message',       minWidth: 200, align: 'left' },
+            { header: '발송건수', name: 'sendCount',     width: 90,    align: 'center' },
+            { header: '상태',     name: 'status',        width: 90,    align: 'center' }
+        ]
     });
 });

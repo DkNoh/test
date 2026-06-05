@@ -2,11 +2,12 @@ package com.example.sms.service.sms;
 
 import com.example.sms.dto.common.PageResponseDTO;
 import com.example.sms.dto.sms.DeptStatSearchRequestDTO;
-import com.example.sms.vo.sms.DeptStatVO;
 import com.example.sms.mapper.sms.DeptStatMapper;
+import com.example.sms.vo.sms.DeptStatVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.util.List;
 
 @Service
@@ -17,27 +18,13 @@ public class DeptStatService {
 
     @Transactional(readOnly = true)
     public PageResponseDTO<DeptStatVO> search(DeptStatSearchRequestDTO request) {
-        int totalCount = mapper.count(request);
-        List<DeptStatVO> list = mapper.selectList(request);
-        return PageResponseDTO.of(list, request, totalCount);
-    }
-
-    @Transactional
-    public void save(DeptStatVO vo) {
-        // TODO: 신규/수정 분기 로직 구현
-        mapper.insert(vo);
-    }
-
-    @Transactional
-    public void delete(String id) {
-        mapper.delete(id);
+        return PageResponseDTO.of(mapper.selectList(request), request, mapper.count(request));
     }
 
     @Transactional(readOnly = true)
-    public void downloadExcel(DeptStatSearchRequestDTO request, jakarta.servlet.http.HttpServletResponse response) {
-        String[] headers = {"DEPT_ID", "DEPT_NM", "TOTAL_SEND_CNT", "TOTAL_SUCCESS_CNT", "TOTAL_FAIL_CNT"};
-        String[] keys = {"deptId", "deptNm", "totalSendCnt", "totalSuccessCnt", "totalFailCnt"};
-        java.util.List<java.util.Map<String, Object>> list = mapper.selectListForExcel(request);
-        com.example.sms.util.ExcelUtil.downloadExcel(response, "DeptStat_export", headers, list, keys);
+    public List<DeptStatVO> getAll(String searchDate) {
+        DeptStatSearchRequestDTO req = new DeptStatSearchRequestDTO();
+        req.setSearchDate(searchDate);
+        return mapper.selectList(req);
     }
 }

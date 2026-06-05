@@ -57,16 +57,11 @@ public class EmployeeService {
         // 클라이언트(화면)에서 값을 누락했거나 악의적으로 권한을 변조하여 넘기는 것을 방어하기 위해
         // 서버사이드(Service)에서 필수 기본 권한과 상태값을 명시적으로 덮어씌웁니다.
         
-        // 1. 계정 사용 여부는 기본적으로 'Y'(활성)로 세팅
-        if (employeeVO.getActYn() == null) employeeVO.setActYn("Y");
-        
-        // 2. 신규 가입 계정의 등급은 일반 사용자(1)로 엄격히 제한
-        if (employeeVO.getEmpLev() == null) employeeVO.setEmpLev("1");
-        
-        // 3. 기본 조회 권한 설정
-        if (employeeVO.getPermSys() == null) employeeVO.setPermSys("N");
-        if (employeeVO.getPermCpn() == null) employeeVO.setPermCpn("N");
-        if (employeeVO.getPermSta() == null) employeeVO.setPermSta("N");
+        if (employeeVO.getUseYn() == null)        employeeVO.setUseYn("Y");
+        if (employeeVO.getUserRole() == null)     employeeVO.setUserRole("ROLE_USER");
+        if (employeeVO.getAuthRead() == null)     employeeVO.setAuthRead("Y");
+        if (employeeVO.getAuthApprove() == null)  employeeVO.setAuthApprove("N");
+        if (employeeVO.getAuthCampaign() == null) employeeVO.setAuthCampaign("N");
         
         // --- [DB 트랜잭션 수행] ---
         // 모든 검증 및 보안 기본값 세팅이 끝난 안전한 객체만을 DB에 최종 인서트합니다.

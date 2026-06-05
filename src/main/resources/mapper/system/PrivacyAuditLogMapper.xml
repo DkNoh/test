@@ -4,7 +4,7 @@
 <mapper namespace="com.example.sms.mapper.PrivacyAuditLogMapper">
 
     <insert id="insertAuditLog" parameterType="com.example.sms.vo.system.PrivacyAuditLogVO">
-        INSERT INTO privacy_audit_log (
+        INSERT INTO TB_PRIVACY_AUDIT_LOG (
             executor_id,
             executor_ip,
             request_url,

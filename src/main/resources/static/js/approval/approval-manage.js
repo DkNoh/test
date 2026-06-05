@@ -107,7 +107,7 @@ document.addEventListener('DOMContentLoaded', function () {
         .then(res => res.json())
         .then(resJson => {
             // 통신 성공 및 비즈니스 로직 정상 처리 시
-            if (resJson.result || resJson.code === 200) {
+            if (resJson.code === 200) {
                 alert(`${actionStr} 처리가 완료되었습니다.`);
                 // 성공적으로 처리되었으므로 열려있는 모달을 닫습니다.
                 if (typeof CommonUtils !== 'undefined') {

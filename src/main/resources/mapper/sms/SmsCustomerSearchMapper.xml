@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.sms.mapper.sms.SmsCustomerSearchMapper">
+
+    <sql id="searchConditions">
+        <where>
+            <if test="msgType != null and msgType != ''">AND h.SEND_TYPE = #{msgType}</if>
+            <if test="receiverNo != null and receiverNo != ''">AND h.RECEIVER_NO LIKE '%' || #{receiverNo} || '%'</if>
+            <if test="searchDate != null and searchDate != ''">AND TRUNC(h.SENT_AT) = TO_DATE(#{searchDate}, 'YYYY-MM-DD')</if>
+        </where>
+    </sql>
+
+    <select id="count" resultType="int">
+        SELECT COUNT(1) FROM SMS_HISTORY h
+        <include refid="searchConditions"/>
+    </select>
+
+    <select id="selectList" resultType="com.example.sms.vo.sms.SmsCustomerSearchVO">
+        SELECT h.SENT_AT AS sentAt, NULL AS receivedAt,
+               c.HOLDER_NAME AS holderName, h.RECEIVER_NO AS receiverNo,
+               h.SENDER_NO AS senderNo, h.MESSAGE AS message,
+               c.INTERMEDIARY AS intermediary, h.SEND_STATUS AS sendStatus,
+               c.DEPT_NM AS deptNm
+        FROM SMS_HISTORY h
+        LEFT JOIN TB_CUSTOMER_SSN c ON c.PHONE_NO = h.RECEIVER_NO
+        <include refid="searchConditions"/>
+        ORDER BY h.SENT_AT DESC, h.ID DESC
+        OFFSET #{offset} ROWS FETCH NEXT #{size} ROWS ONLY
+    </select>
+
+</mapper>

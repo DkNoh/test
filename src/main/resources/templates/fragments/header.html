@@ -4,14 +4,16 @@
     <!-- CoreUI Header 컴포넌트 -->
     <header class="header header-sticky p-0 border-bottom" th:fragment="header" style="z-index: 10;">
         <div class="container-fluid px-3" style="min-height: 56px;">
-            
-            <!-- 사이드바 축소/확장 버튼 (ID 복구) -->
-            <button class="header-toggler px-md-0 me-md-3" type="button" id="sidebarToggleBtn">
-                <svg class="icon icon-lg" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+
+            <!-- 사이드바 토글 버튼 (왼쪽 끝) -->
+            <button id="sidebarToggleBtn" type="button" title="사이드바 접기/펼치기"
+                    class="btn btn-link p-0 me-3 text-secondary d-flex align-items-center"
+                    style="text-decoration:none; box-shadow:none;">
+                <svg id="toggleIcon" viewBox="0 0 24 24" fill="currentColor" style="width:20px;height:20px;">
+                    <path id="toggleIconPath" d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
                 </svg>
             </button>
-            
+
             <!-- 현재 페이지 타이틀 렌더링 -->
             <ul class="header-nav d-none d-md-flex">
                 <li class="nav-item">

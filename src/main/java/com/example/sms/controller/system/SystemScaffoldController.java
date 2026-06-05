@@ -1,21 +1,36 @@
 package com.example.sms.controller.system;
 
 import com.example.sms.dto.common.ApiResponse;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import net.sf.jsqlparser.parser.CCJSqlParserUtil;
+import net.sf.jsqlparser.schema.Column;
+import net.sf.jsqlparser.statement.select.PlainSelect;
+import net.sf.jsqlparser.statement.select.SelectItem;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
+@Slf4j
+@Profile("dev")
 @Controller
 @RequestMapping("/system/scaffold")
+@RequiredArgsConstructor
 public class SystemScaffoldController {
 
-    private static final String BASE_DIR = System.getProperty("user.dir");
+    private final JdbcTemplate jdbcTemplate;
 
     @GetMapping
     public String scaffoldPage() {
@@ -25,34 +40,47 @@ public class SystemScaffoldController {
     @ResponseBody
     @PostMapping("/generate")
     public ResponseEntity<ApiResponse<Map<String, String>>> generateCode(@RequestBody Map<String, Object> request) {
-        String moduleName = (String) request.get("moduleName");
-        String domainId = (String) request.get("domainId");
+        String moduleName  = (String) request.get("moduleName");
+        String domainId    = (String) request.get("domainId");
         String domainClass = (String) request.get("domainClass");
-        String domainName = (String) request.get("domainName");
-        String rawQuery = (String) request.get("rawQuery");
-        boolean includeCud = Boolean.TRUE.equals(request.get("includeCud"));
-        boolean includeExcel = Boolean.TRUE.equals(request.get("includeExcel"));
-        boolean includeExcelGrid = Boolean.TRUE.equals(request.get("includeExcelGrid"));
+        String domainName  = (String) request.get("domainName");
+        String rawQuery    = (String) request.get("rawQuery");
+        boolean includeCud      = Boolean.TRUE.equals(request.get("includeCud"));
+        boolean includeExcel    = Boolean.TRUE.equals(request.get("includeExcel"));
+        boolean includeExcelGrid= Boolean.TRUE.equals(request.get("includeExcelGrid"));
 
         if (moduleName == null || domainId == null || domainClass == null || domainName == null) {
             return ResponseEntity.badRequest().body(ApiResponse.error(400, "필수 파라미터가 누락되었습니다."));
         }
 
         try {
-            // 쿼리 파싱하여 컬럼 목록 및 검색 조건 추출
             List<String> parsedCols = extractColumnsFromQuery(rawQuery);
             List<String> searchVars = extractSearchVarsFromQuery(rawQuery);
             String[] cols = parsedCols.toArray(new String[0]);
-            
-            Map<String, String> results = new java.util.LinkedHashMap<>();
-            results.put("SearchRequestDTO.java", getDtoTemplate(moduleName, domainClass, cols, searchVars));
-            results.put("VO.java", getVoTemplate(moduleName, domainClass, cols));
-            results.put("Mapper.java", getMapperInterfaceTemplate(moduleName, domainClass, includeCud, includeExcel));
-            results.put("Mapper.xml", getMapperXmlTemplate(moduleName, domainClass, cols, rawQuery, includeCud, searchVars, includeExcel));
-            results.put("Service.java", getServiceTemplate(moduleName, domainClass, includeCud, includeExcel, cols));
-            results.put("Controller.java", getControllerTemplate(moduleName, domainId, domainClass, includeCud, includeExcel));
-            results.put(domainId + "-manage.html", getHtmlTemplate(moduleName, domainId, domainName, searchVars, includeExcel, includeExcelGrid));
-            results.put(domainId + "-manage.js", getJsTemplate(moduleName, domainId, domainName, cols, searchVars, includeExcel, includeExcelGrid));
+
+            // ② ResultSetMetaData 타입 추론
+            Map<String, String> typeMap = inferColumnTypes(rawQuery, parsedCols);
+
+            // 탭에 실제 파일명 표시
+            Map<String, String> results = new LinkedHashMap<>();
+            results.put(domainClass + "SearchRequestDTO.java",
+                getDtoTemplate(moduleName, domainClass, searchVars));
+            results.put(domainClass + "VO.java",
+                getVoTemplate(moduleName, domainClass, cols, typeMap));
+            results.put(domainClass + "Mapper.java",
+                getMapperInterfaceTemplate(moduleName, domainClass, includeCud, includeExcel));
+            results.put(domainClass + "Mapper.xml",
+                getMapperXmlTemplate(moduleName, domainClass, cols, rawQuery, includeCud, searchVars, includeExcel));
+            results.put(domainClass + "Service.java",
+                getServiceTemplate(moduleName, domainClass, includeCud, includeExcel, cols));
+            results.put(domainClass + "Controller.java",
+                getControllerTemplate(moduleName, domainId, domainClass, includeCud, includeExcel));
+            results.put(domainId + "-manage.html",
+                getHtmlTemplate(moduleName, domainId, domainName, searchVars, includeExcel, includeExcelGrid));
+            results.put(domainId + "-manage.js",
+                getJsTemplate(moduleName, domainId, domainName, cols, searchVars, includeExcel, includeExcelGrid));
+            results.put("메뉴등록.sql",
+                getMenuSqlTemplate(moduleName, domainId, domainClass, domainName));
 
             return ResponseEntity.ok(ApiResponse.success(results));
         } catch (Exception e) {
@@ -63,55 +91,69 @@ public class SystemScaffoldController {
     @ResponseBody
     @PostMapping("/generate-excel-snippet")
     public ResponseEntity<ApiResponse<Map<String, String>>> generateExcelSnippet(@RequestBody Map<String, Object> request) {
-        String moduleName = (String) request.get("moduleName");
+        String moduleName  = (String) request.get("moduleName");
         String domainClass = (String) request.get("domainClass");
-        String rawQuery = (String) request.get("rawQuery");
-        
-        List<String> searchVars = extractSearchVarsFromQuery(rawQuery);
+        String rawQuery    = (String) request.get("rawQuery");
 
-        String controllerSnippet = 
+        List<String> searchVars = extractSearchVarsFromQuery(rawQuery);
+        List<String> parsedCols = extractColumnsFromQuery(rawQuery);
+        String[] cols = parsedCols.toArray(new String[0]);
+
+        String controllerSnippet =
             "    @GetMapping(\"/excel\")\n" +
             "    public void downloadExcel(@ModelAttribute " + domainClass + "SearchRequestDTO request, jakarta.servlet.http.HttpServletResponse response) {\n" +
             "        service.downloadExcel(request, response);\n" +
             "    }";
 
-        String serviceSnippet = 
-            "    @Transactional(readOnly = true)\n" +
-            "    public void downloadExcel(" + domainClass + "SearchRequestDTO request, jakarta.servlet.http.HttpServletResponse response) {\n" +
-            "        java.util.List<" + domainClass + "VO> list = mapper.selectListForExcel(request);\n" +
-            "        com.example.sms.util.ExcelUtils.download(response, list, " + domainClass + "VO.class, \"" + domainClass + "\");\n" +
-            "    }";
+        StringBuilder serviceSnippetSb = new StringBuilder();
+        serviceSnippetSb.append("    @Transactional(readOnly = true)\n")
+            .append("    public void downloadExcel(").append(domainClass).append("SearchRequestDTO request, jakarta.servlet.http.HttpServletResponse response) {\n")
+            .append("        String[] headers = {");
+        for (int i = 0; i < cols.length; i++) {
+            if (i > 0) serviceSnippetSb.append(", ");
+            serviceSnippetSb.append("\"").append(cols[i].trim()).append("\"");
+        }
+        serviceSnippetSb.append("};\n")
+            .append("        String[] keys = {");
+        for (int i = 0; i < cols.length; i++) {
+            if (i > 0) serviceSnippetSb.append(", ");
+            serviceSnippetSb.append("\"").append(cols[i].trim().toUpperCase()).append("\"");
+        }
+        serviceSnippetSb.append("};\n")
+            .append("        java.util.List<java.util.Map<String, Object>> list = mapper.selectListForExcel(request);\n")
+            .append("        com.example.sms.util.ExcelUtil.downloadExcel(response, \"").append(domainClass).append("_export\", headers, list, keys);\n")
+            .append("    }");
 
-        String mapperSnippet = 
-            "    java.util.List<" + domainClass + "VO> selectListForExcel(" + domainClass + "SearchRequestDTO request);";
+        String mapperSnippet =
+            "    java.util.List<java.util.Map<String, Object>> selectListForExcel(" + domainClass + "SearchRequestDTO request);";
 
         StringBuilder xmlSnippet = new StringBuilder();
-        xmlSnippet.append("    <select id=\"selectListForExcel\" resultType=\"com.example.sms.dto.").append(moduleName).append(".").append(domainClass).append("VO\">\n");
-        xmlSnippet.append("        /* TODO: 이곳에 ROWNUM 페이징을 제외한 순수 데이터 조회 쿼리를 작성하세요 */\n");
+        xmlSnippet.append("    <select id=\"selectListForExcel\" resultType=\"java.util.HashMap\">\n");
+        xmlSnippet.append("        /* TODO: 페이징 없는 순수 데이터 조회 쿼리를 작성하세요 */\n");
         xmlSnippet.append("        <include refid=\"searchConditions\"/>\n");
         xmlSnippet.append("    </select>");
 
-        String htmlSnippet = 
+        String htmlSnippet =
             "                <button type=\"button\" class=\"btn btn-success\" id=\"btn-excel\">엑셀 다운로드</button>";
 
         StringBuilder jsSnippet = new StringBuilder();
-        jsSnippet.append("    document.getElementById('btn-excel')?.addEventListener('click', () => {\n");
+        jsSnippet.append("    document.querySelector('#btn-excel')?.addEventListener('click', () => {\n");
         if (searchVars.isEmpty()) {
-            jsSnippet.append("        const qs = `?searchKeyword=${document.getElementById('searchKeyword').value}`;\n");
+            jsSnippet.append("        const qs = `?searchKeyword=${document.querySelector('#searchKeyword').value}`;\n");
         } else {
             jsSnippet.append("        const qs = `?");
             for (int i = 0; i < searchVars.size(); i++) {
                 if (i > 0) jsSnippet.append("&");
-                jsSnippet.append(searchVars.get(i)).append("=${document.getElementById('").append(searchVars.get(i)).append("').value}");
+                jsSnippet.append(searchVars.get(i)).append("=${document.querySelector('#").append(searchVars.get(i)).append("').value}");
             }
             jsSnippet.append("`;\n");
         }
-        jsSnippet.append("        window.location.href = pageBuilder.apiUrl.replace('/data', '') + '/excel' + qs;\n");
+        jsSnippet.append("        window.location.href = pageBuilder.config.apiUrl.replace('/data', '') + '/excel' + qs;\n");
         jsSnippet.append("    });");
 
         return ResponseEntity.ok(ApiResponse.success(Map.of(
             "Controller (.java)", controllerSnippet,
-            "Service (.java)", serviceSnippet,
+            "Service (.java)", serviceSnippetSb.toString(),
             "Mapper (.java)", mapperSnippet,
             "XML (.xml)", xmlSnippet.toString(),
             "HTML (.html)", htmlSnippet,
@@ -119,11 +161,128 @@ public class SystemScaffoldController {
         )));
     }
 
-    private java.util.List<String> extractColumnsFromQuery(String query) {
-        java.util.List<String> columns = new java.util.ArrayList<>();
-        if (query == null || query.trim().isEmpty()) return columns;
-        
-        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("SELECT(.*?)\\s+FROM\\s", java.util.regex.Pattern.CASE_INSENSITIVE | java.util.regex.Pattern.DOTALL);
+    // =========================================================================
+    // QUERY HELPERS
+    // =========================================================================
+
+    /**
+     * ResultSetMetaData 기반 컬럼 타입 추론.
+     */
+    private Map<String, String> inferColumnTypes(String rawQuery, List<String> columns) {
+        Map<String, String> typeMap = new LinkedHashMap<>();
+        columns.forEach(c -> typeMap.put(c, "String"));
+
+        if (rawQuery == null || rawQuery.trim().isEmpty() || columns.isEmpty()) return typeMap;
+
+        String safeQuery = rawQuery
+            .replaceAll("(?i)<[^>]+>", " ")
+            .replaceAll("#\\{[^}]+\\}", "NULL")
+            .replaceAll("\\$\\{[^}]+\\}", "NULL")
+            .replaceAll("\\$([a-zA-Z0-9_]+)", "NULL")
+            .replaceAll("(?m)^\\s*AND\\s*$", "")
+            .replaceAll("(?m)^\\s*OR\\s*$", "")
+            .replaceAll("(?i)WHERE\\s+(AND|OR)\\b", "WHERE 1=1")
+            .trim();
+        String wrappedQuery = "SELECT * FROM (" + safeQuery + ") WHERE ROWNUM = 0";
+
+        try {
+            jdbcTemplate.execute((Connection conn) -> {
+                try (PreparedStatement ps = conn.prepareStatement(wrappedQuery);
+                     ResultSet rs = ps.executeQuery()) {
+                    ResultSetMetaData meta = rs.getMetaData();
+                    for (int i = 1; i <= meta.getColumnCount(); i++) {
+                        String label     = meta.getColumnLabel(i);
+                        String oraType   = meta.getColumnTypeName(i);
+                        int    precision = meta.getPrecision(i);
+                        int    scale     = meta.getScale(i);
+                        String javaType  = oracleTypeToJava(oraType, precision, scale);
+                        String matched   = findMatchingColumn(columns, label);
+                        if (matched != null) typeMap.put(matched, javaType);
+                    }
+                }
+                return null;
+            });
+            log.debug("[Scaffold] 타입 추론 성공: {}", typeMap);
+        } catch (Exception e) {
+            log.warn("[Scaffold] 타입 추론 실패 → 전부 String 사용. 원인: {}", e.getMessage());
+        }
+        return typeMap;
+    }
+
+    private String oracleTypeToJava(String oracleType, int precision, int scale) {
+        return switch (oracleType.toUpperCase().split("\\(")[0].trim()) {
+            case "NUMBER"  -> scale > 0 ? "BigDecimal" : (precision > 9 ? "Long" : "Integer");
+            case "DATE"    -> "LocalDate";
+            case "TIMESTAMP", "TIMESTAMP WITH TIME ZONE",
+                 "TIMESTAMP WITH LOCAL TIME ZONE" -> "LocalDateTime";
+            case "CLOB", "NCLOB" -> "String";
+            case "BLOB"          -> "byte[]";
+            default              -> "String";
+        };
+    }
+
+    private String findMatchingColumn(List<String> columns, String label) {
+        for (String col : columns) {
+            if (col.equalsIgnoreCase(label)) return col;
+        }
+        return null;
+    }
+
+    /**
+     * JSQLParser 기반 컬럼 추출. 파싱 실패 시 정규식 fallback.
+     */
+    private List<String> extractColumnsFromQuery(String query) {
+        if (query == null || query.trim().isEmpty()) return new ArrayList<>();
+
+        String safeQuery = query
+            .replaceAll("#\\{[^}]+\\}", "NULL")
+            .replaceAll("\\$\\{[^}]+\\}", "NULL")
+            .replaceAll("\\$([a-zA-Z0-9_]+)", "NULL");
+
+        try {
+            net.sf.jsqlparser.statement.Statement stmt =
+                CCJSqlParserUtil.parse(safeQuery);
+
+            PlainSelect select;
+            if (stmt instanceof net.sf.jsqlparser.statement.select.Select s
+                && s.getPlainSelect() != null) {
+                select = s.getPlainSelect();
+            } else {
+                throw new Exception("PlainSelect 구조 아님");
+            }
+
+            List<String> columns = new ArrayList<>();
+            for (SelectItem<?> item : select.getSelectItems()) {
+                String alias = item.getAlias() != null ? item.getAlias().getName() : null;
+                if (alias != null) {
+                    columns.add(alias.replaceAll("^\"|\"$", ""));
+                } else {
+                    if (item.getExpression() instanceof Column col) {
+                        columns.add(col.getColumnName());
+                    } else {
+                        String expr = item.getExpression().toString();
+                        String[] tokens = expr.split("[^a-zA-Z0-9_]");
+                        String last = "";
+                        for (String t : tokens) {
+                            if (!t.trim().isEmpty()) last = t.trim();
+                        }
+                        if (!last.isEmpty()) columns.add(last);
+                    }
+                }
+            }
+            log.debug("[Scaffold] JSQLParser 파싱 성공 — 컬럼 {}개: {}", columns.size(), columns);
+            return columns;
+
+        } catch (Exception e) {
+            log.warn("[Scaffold] JSQLParser 파싱 실패, fallback 사용: {}", e.getMessage());
+            return extractColumnsFromQueryFallback(query);
+        }
+    }
+
+    private List<String> extractColumnsFromQueryFallback(String query) {
+        List<String> columns = new ArrayList<>();
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile(
+            "SELECT(.*?)\\s+FROM\\s", java.util.regex.Pattern.CASE_INSENSITIVE | java.util.regex.Pattern.DOTALL);
         java.util.regex.Matcher matcher = pattern.matcher(query);
         if (matcher.find()) {
             String selectPart = matcher.group(1);
@@ -132,64 +291,104 @@ public class SystemScaffoldController {
                 part = part.trim();
                 if (part.isEmpty()) continue;
                 String[] tokens = part.split("\\s+");
-                String colName = tokens[tokens.length - 1]; // 마지막 단어 (AS 별칭 또는 컬럼명)
-                if (colName.contains(".")) {
-                    colName = colName.substring(colName.lastIndexOf(".") + 1);
-                }
+                String colName = tokens[tokens.length - 1];
+                if (colName.contains(".")) colName = colName.substring(colName.lastIndexOf(".") + 1);
                 columns.add(colName);
             }
         }
         return columns;
     }
 
-    private java.util.List<String> extractSearchVarsFromQuery(String query) {
-        java.util.List<String> vars = new java.util.ArrayList<>();
+    private List<String> extractSearchVarsFromQuery(String query) {
+        List<String> vars = new ArrayList<>();
         if (query == null || query.trim().isEmpty()) return vars;
-        
         java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("\\$([a-zA-Z0-9_]+)");
         java.util.regex.Matcher matcher = pattern.matcher(query);
         while (matcher.find()) {
-            String varName = matcher.group(1);
-            if (!vars.contains(varName)) {
-                vars.add(varName);
-            }
+            // $base_dt → baseDt (camelCase) : map-underscore-to-camel-case 설정과 일치시킴
+            String varName = toCamelCase(matcher.group(1));
+            if (!vars.contains(varName)) vars.add(varName);
         }
         return vars;
     }
 
-    private void createJavaFile(String subPackage, String fileName, String content) throws IOException {
-        String path = "src/main/java/com/example/sms/" + subPackage;
-        createFile(path, fileName, content);
-    }
+    private String processRawQueryLines(String rawQuery, String indent) {
+        StringBuilder pq = new StringBuilder();
+        String[] lines = rawQuery.split("\n");
+        for (String line : lines) {
+            if (line.contains("$")) {
+                java.util.regex.Matcher lineMatcher =
+                    java.util.regex.Pattern.compile("\\$([a-zA-Z0-9_]+)").matcher(line);
+                List<String> lineVars = new ArrayList<>();
+                // $base_dt → baseDt (camelCase) 로 변환
+                while (lineMatcher.find()) lineVars.add(toCamelCase(lineMatcher.group(1)));
 
-    private void createFile(String path, String fileName, String content) throws IOException {
-        File dir = new File(BASE_DIR, path);
-        if (!dir.exists()) {
-            dir.mkdirs();
+                pq.append(indent).append("    <if test=\"");
+                for (int i = 0; i < lineVars.size(); i++) {
+                    if (i > 0) pq.append(" and ");
+                    pq.append(lineVars.get(i)).append(" != null and ").append(lineVars.get(i)).append(" != ''");
+                }
+                pq.append("\">\n");
+
+                // $base_dt → #{baseDt} (camelCase) 로 치환
+                String replacedLine = java.util.regex.Pattern.compile("\\$([a-zA-Z0-9_]+)")
+                    .matcher(line)
+                    .replaceAll(mr -> "#{" + toCamelCase(mr.group(1)) + "}");
+                pq.append(indent).append("        ").append(replacedLine).append("\n");
+                pq.append(indent).append("    </if>\n");
+            } else {
+                pq.append(indent).append(line).append("\n");
+            }
         }
-        File file = new File(dir, fileName);
-        if (file.exists()) {
-            return;
-        }
-        try (FileWriter writer = new FileWriter(file)) {
-            writer.write(content);
-        }
+        return pq.toString();
     }
 
     private String toCamelCase(String s) {
         String[] parts = s.toLowerCase().split("_");
-        StringBuilder camelCaseString = new StringBuilder(parts[0]);
+        StringBuilder sb = new StringBuilder(parts[0]);
         for (int i = 1; i < parts.length; i++) {
-            camelCaseString.append(parts[i].substring(0, 1).toUpperCase()).append(parts[i].substring(1));
+            sb.append(Character.toUpperCase(parts[i].charAt(0))).append(parts[i].substring(1));
         }
-        return camelCaseString.toString();
+        return sb.toString();
     }
 
     // =========================================================================
     // TEMPLATES
     // =========================================================================
 
-    private String getDtoTemplate(String module, String domainClass, String[] cols, List<String> searchVars) {
+    private String getMenuSqlTemplate(String module, String domainId, String domainClass, String domainName) {
+        String menuCd   = ("M_" + module + "_" + domainId).toUpperCase().replace("-", "_");
+        String parentCd = ("M_" + module).toUpperCase();
+        String menuUrl  = "/" + module + "/" + domainId;
+
+        return "-- ============================================================\n"
+             + "-- 메뉴 등록 SQL  ( " + domainName + " )\n"
+             + "-- ============================================================\n\n"
+             + "-- 1) DB 직접 실행용\n"
+             + "INSERT INTO TB_MENU (MENU_CD, MENU_NM, MENU_URL, UP_MENU_CD, SORT_ORD, REG_ID, USE_YN)\n"
+             + "VALUES ('" + menuCd + "', '" + domainName + "', '" + menuUrl + "', '" + parentCd + "', 99, 'SYSTEM', 'Y');\n\n"
+             + "INSERT INTO TB_MENU_AUTH (MENU_CD, AUTH_CD, REG_ID)\n"
+             + "VALUES ('" + menuCd + "', 'ROLE_ADMIN', 'SYSTEM');\n\n"
+             + "COMMIT;\n\n"
+             + "-- 2) TableInitRunner.java 에 추가할 코드\n"
+             + "insertMenuIfNotExist(jdbcTemplate,\n"
+             + "    \"" + menuCd + "\",\n"
+             + "    \"" + domainName + "\",\n"
+             + "    \"" + menuUrl + "\",\n"
+             + "    \"" + parentCd + "\",\n"
+             + "    99);  // ← SORT_ORD 실제 순서에 맞게 조정\n\n"
+             + "-- 3) 파일 배치 경로\n"
+             + "-- src/main/java/.../dto/"        + module + "/" + domainClass + "SearchRequestDTO.java\n"
+             + "-- src/main/java/.../vo/"         + module + "/" + domainClass + "VO.java\n"
+             + "-- src/main/java/.../mapper/"     + module + "/" + domainClass + "Mapper.java\n"
+             + "-- src/main/java/.../service/"    + module + "/" + domainClass + "Service.java\n"
+             + "-- src/main/java/.../controller/" + module + "/" + domainClass + "Controller.java\n"
+             + "-- src/main/resources/mapper/"    + module + "/" + domainClass + "Mapper.xml\n"
+             + "-- src/main/resources/templates/" + module + "/" + domainId + "-manage.html\n"
+             + "-- src/main/resources/static/js/" + module + "/" + domainId + "-manage.js\n";
+    }
+
+    private String getDtoTemplate(String module, String domainClass, List<String> searchVars) {
         StringBuilder sb = new StringBuilder();
         sb.append("package com.example.sms.dto.").append(module).append(";\n\n")
           .append("import com.example.sms.dto.common.PageRequestDTO;\n")
@@ -201,25 +400,32 @@ public class SystemScaffoldController {
         if (searchVars.isEmpty()) {
             sb.append("    private String searchKeyword;\n");
         } else {
-            for (String var : searchVars) {
-                sb.append("    private String ").append(var).append(";\n");
-            }
+            for (String var : searchVars) sb.append("    private String ").append(var).append(";\n");
         }
         sb.append("}\n");
         return sb.toString();
     }
 
-    private String getVoTemplate(String module, String domainClass, String[] cols) {
+    private String getVoTemplate(String module, String domainClass, String[] cols, Map<String, String> typeMap) {
+        boolean hasLocalDate     = typeMap.values().stream().anyMatch(t -> t.equals("LocalDate"));
+        boolean hasLocalDateTime = typeMap.values().stream().anyMatch(t -> t.equals("LocalDateTime"));
+        boolean hasBigDecimal    = typeMap.values().stream().anyMatch(t -> t.equals("BigDecimal"));
+
         StringBuilder sb = new StringBuilder();
-        sb.append("package com.example.sms.dto.").append(module).append(";\n\n")
+        sb.append("package com.example.sms.vo.").append(module).append(";\n\n");
+        if (hasLocalDate)     sb.append("import java.time.LocalDate;\n");
+        if (hasLocalDateTime) sb.append("import java.time.LocalDateTime;\n");
+        if (hasBigDecimal)    sb.append("import java.math.BigDecimal;\n");
+        sb.append("import jakarta.validation.constraints.NotBlank;\n")
+          .append("import jakarta.validation.constraints.Size;\n")
           .append("import lombok.Data;\n\n")
           .append("@Data\n")
           .append("public class ").append(domainClass).append("VO {\n")
           .append("    private long rowNum;\n");
-        
         for (String c : cols) {
-            if(!c.trim().isEmpty()) {
-                sb.append("    private String ").append(toCamelCase(c.trim())).append(";\n");
+            if (!c.trim().isEmpty()) {
+                String javaType = typeMap.getOrDefault(c, "String");
+                sb.append("    private ").append(javaType).append(" ").append(toCamelCase(c.trim())).append(";\n");
             }
         }
         sb.append("}\n");
@@ -230,46 +436,28 @@ public class SystemScaffoldController {
         StringBuilder sb = new StringBuilder();
         sb.append("package com.example.sms.mapper.").append(module).append(";\n\n")
           .append("import com.example.sms.dto.").append(module).append(".").append(domainClass).append("SearchRequestDTO;\n")
-          .append("import com.example.sms.dto.").append(module).append(".").append(domainClass).append("VO;\n")
+          .append("import com.example.sms.vo.").append(module).append(".").append(domainClass).append("VO;\n")
           .append("import org.apache.ibatis.annotations.Mapper;\n")
           .append("import java.util.List;\n")
           .append("import java.util.Map;\n\n")
           .append("@Mapper\n")
-          .append("public interface ").append(domainClass).append("Mapper {\n")
-          .append("    /**\n")
-          .append("     * 조건에 맞는 전체 데이터 건수 조회\n")
-          .append("     */\n")
+          .append("public interface ").append(domainClass).append("Mapper {\n\n")
           .append("    int count(").append(domainClass).append("SearchRequestDTO request);\n\n")
-          .append("    /**\n")
-          .append("     * 페이징 처리된 목록 데이터 조회\n")
-          .append("     */\n")
           .append("    List<").append(domainClass).append("VO> selectList(").append(domainClass).append("SearchRequestDTO request);\n");
-        
         if (includeCud) {
-            sb.append("\n    /**\n")
-              .append("     * 신규 데이터 등록\n")
-              .append("     */\n")
-              .append("    int insert(").append(domainClass).append("VO vo);\n\n")
-              .append("    /**\n")
-              .append("     * 기존 데이터 수정\n")
-              .append("     */\n")
+            sb.append("\n    int insert(").append(domainClass).append("VO vo);\n\n")
               .append("    int update(").append(domainClass).append("VO vo);\n\n")
-              .append("    /**\n")
-              .append("     * 데이터 삭제\n")
-              .append("     */\n")
               .append("    int delete(String id);\n");
         }
         if (includeExcel) {
-            sb.append("\n    /**\n")
-              .append("     * 엑셀 다운로드용 전체 데이터 조회 (페이징 없음)\n")
-              .append("     */\n")
-              .append("    List<Map<String, Object>> selectListForExcel(").append(domainClass).append("SearchRequestDTO request);\n");
+            sb.append("\n    List<Map<String, Object>> selectListForExcel(").append(domainClass).append("SearchRequestDTO request);\n");
         }
         sb.append("}\n");
         return sb.toString();
     }
 
-    private String getMapperXmlTemplate(String module, String domainClass, String[] cols, String rawQuery, boolean includeCud, List<String> searchVars, boolean includeExcel) {
+    private String getMapperXmlTemplate(String module, String domainClass, String[] cols, String rawQuery,
+                                         boolean includeCud, List<String> searchVars, boolean includeExcel) {
         StringBuilder sb = new StringBuilder();
         sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
           .append("<!DOCTYPE mapper PUBLIC \"-//mybatis.org//DTD Mapper 3.0//EN\" \"http://mybatis.org/dtd/mybatis-3-mapper.dtd\">\n")
@@ -282,55 +470,31 @@ public class SystemScaffoldController {
               .append("            </if>\n");
         }
         sb.append("        </where>\n")
-          .append("    </sql>\n\n")
-          .append("    <select id=\"count\" resultType=\"int\">\n")
+          .append("    </sql>\n\n");
+
+        sb.append("    <select id=\"count\" resultType=\"int\">\n")
           .append("        SELECT COUNT(1) FROM (\n");
-        
         if (rawQuery != null && !rawQuery.trim().isEmpty()) {
-            StringBuilder pq = new StringBuilder();
-            String[] lines = rawQuery.split("\n");
-            for (String line : lines) {
-                if (line.contains("$")) {
-                    java.util.regex.Matcher lineMatcher = java.util.regex.Pattern.compile("\\$([a-zA-Z0-9_]+)").matcher(line);
-                    java.util.List<String> lineVars = new java.util.ArrayList<>();
-                    while (lineMatcher.find()) { lineVars.add(lineMatcher.group(1)); }
-                    
-                    pq.append("            <if test=\"");
-                    for (int i = 0; i < lineVars.size(); i++) {
-                        if (i > 0) pq.append(" and ");
-                        pq.append(lineVars.get(i)).append(" != null and ").append(lineVars.get(i)).append(" != ''");
-                    }
-                    pq.append("\">\n");
-                    pq.append("                ").append(line.replaceAll("\\$([a-zA-Z0-9_]+)", "#{$1}")).append("\n");
-                    pq.append("            </if>\n");
-                } else {
-                    pq.append("            ").append(line).append("\n");
-                }
-            }
-            sb.append(pq.toString());
+            sb.append(processRawQueryLines(rawQuery, "        "));
         } else {
             sb.append("            SELECT 1 FROM DUAL /* TODO: 조인 쿼리로 수정 */\n");
         }
-        
         sb.append("        ) A\n")
           .append("        <include refid=\"searchConditions\"/>\n")
-          .append("    </select>\n\n")
-          .append("    <select id=\"selectList\" resultType=\"com.example.sms.dto.").append(module).append(".").append(domainClass).append("VO\">\n")
-          .append("        SELECT * FROM (\n")
-          .append("            SELECT A.*, ROWNUM AS RNUM FROM (\n")
-          .append("                SELECT X.* FROM (\n");
-        
-        if (rawQuery != null && !rawQuery.trim().isEmpty()) {
-            String processedQuery = rawQuery.replaceAll("\\$([a-zA-Z0-9_]+)", "#{$1}");
-            sb.append("                    ").append(processedQuery.replaceAll("\n", "\n                    ")).append("\n");
-        } else {
-            sb.append("                    SELECT 1 AS example FROM DUAL /* TODO: 다중 조인 쿼리 작성 */\n");
-        }
+          .append("    </select>\n\n");
 
-        sb.append("                ) X\n")
-          .append("                <include refid=\"searchConditions\"/>\n")
-          .append("            ) A WHERE ROWNUM <![CDATA[<=]]> #{offset} + #{size}\n")
-          .append("        ) WHERE RNUM > #{offset}\n")
+        sb.append("    <select id=\"selectList\" resultType=\"com.example.sms.vo.").append(module).append(".").append(domainClass).append("VO\">\n")
+          .append("        SELECT A.*\n")
+          .append("        FROM (\n");
+        if (rawQuery != null && !rawQuery.trim().isEmpty()) {
+            sb.append(processRawQueryLines(rawQuery, "        "));
+        } else {
+            sb.append("            SELECT 1 AS example FROM DUAL /* TODO: 조회 쿼리 작성 */\n");
+        }
+        sb.append("        ) A\n")
+          .append("        <include refid=\"searchConditions\"/>\n")
+          .append("        ORDER BY A.ROWID DESC /* TODO: 실제 정렬 컬럼으로 교체 (결정적 정렬 필수) */\n")
+          .append("        OFFSET #{offset} ROWS FETCH NEXT #{size} ROWS ONLY\n")
           .append("    </select>\n");
 
         if (includeCud) {
@@ -350,10 +514,6 @@ public class SystemScaffoldController {
                 String processedQuery = rawQuery.replaceAll("\\$([a-zA-Z0-9_]+)", "#{$1}");
                 sb.append("        ").append(processedQuery.replaceAll("\n", "\n        ")).append("\n");
                 sb.append("        <include refid=\"searchConditions\"/>\n");
-                if (rawQuery.toUpperCase().contains("ORDER BY")) {
-                    int orderByIndex = rawQuery.toUpperCase().indexOf("ORDER BY");
-                    sb.append("            ").append(rawQuery.substring(orderByIndex)).append("\n");
-                }
             } else {
                 sb.append("        SELECT 1 AS example FROM DUAL\n");
                 sb.append("        <include refid=\"searchConditions\"/>\n");
@@ -369,7 +529,7 @@ public class SystemScaffoldController {
         sb.append("package com.example.sms.service.").append(module).append(";\n\n")
           .append("import com.example.sms.dto.common.PageResponseDTO;\n")
           .append("import com.example.sms.dto.").append(module).append(".").append(domainClass).append("SearchRequestDTO;\n")
-          .append("import com.example.sms.dto.").append(module).append(".").append(domainClass).append("VO;\n")
+          .append("import com.example.sms.vo.").append(module).append(".").append(domainClass).append("VO;\n")
           .append("import com.example.sms.mapper.").append(module).append(".").append(domainClass).append("Mapper;\n")
           .append("import lombok.RequiredArgsConstructor;\n")
           .append("import org.springframework.stereotype.Service;\n")
@@ -379,38 +539,25 @@ public class SystemScaffoldController {
           .append("@RequiredArgsConstructor\n")
           .append("public class ").append(domainClass).append("Service {\n\n")
           .append("    private final ").append(domainClass).append("Mapper mapper;\n\n")
-          .append("    /**\n")
-          .append("     * 목록 조회 및 페이징 처리\n")
-          .append("     */\n")
           .append("    @Transactional(readOnly = true)\n")
           .append("    public PageResponseDTO<").append(domainClass).append("VO> search(").append(domainClass).append("SearchRequestDTO request) {\n")
           .append("        int totalCount = mapper.count(request);\n")
           .append("        List<").append(domainClass).append("VO> list = mapper.selectList(request);\n")
           .append("        return PageResponseDTO.of(list, request, totalCount);\n")
           .append("    }\n");
-
         if (includeCud) {
-            sb.append("\n    /**\n")
-              .append("     * 데이터 저장 (신규 등록 및 수정)\n")
-              .append("     */\n")
-              .append("    @Transactional\n")
+            sb.append("\n    @Transactional\n")
               .append("    public void save(").append(domainClass).append("VO vo) {\n")
               .append("        // TODO: 신규/수정 분기 로직 구현\n")
               .append("        mapper.insert(vo);\n")
               .append("    }\n\n")
-              .append("    /**\n")
-              .append("     * 데이터 삭제\n")
-              .append("     */\n")
               .append("    @Transactional\n")
               .append("    public void delete(String id) {\n")
               .append("        mapper.delete(id);\n")
               .append("    }\n");
         }
         if (includeExcel) {
-            sb.append("\n    /**\n")
-              .append("     * 대용량 엑셀 다운로드 처리\n")
-              .append("     */\n")
-              .append("    @Transactional(readOnly = true)\n")
+            sb.append("\n    @Transactional(readOnly = true)\n")
               .append("    public void downloadExcel(").append(domainClass).append("SearchRequestDTO request, jakarta.servlet.http.HttpServletResponse response) {\n")
               .append("        String[] headers = {");
             for (int i = 0; i < cols.length; i++) {
@@ -438,8 +585,9 @@ public class SystemScaffoldController {
           .append("import com.example.sms.dto.common.ApiResponse;\n")
           .append("import com.example.sms.dto.common.PageResponseDTO;\n")
           .append("import com.example.sms.dto.").append(module).append(".").append(domainClass).append("SearchRequestDTO;\n")
-          .append("import com.example.sms.dto.").append(module).append(".").append(domainClass).append("VO;\n")
+          .append("import com.example.sms.vo.").append(module).append(".").append(domainClass).append("VO;\n")
           .append("import com.example.sms.service.").append(module).append(".").append(domainClass).append("Service;\n")
+          .append("import jakarta.validation.Valid;\n")
           .append("import lombok.RequiredArgsConstructor;\n")
           .append("import org.springframework.http.ResponseEntity;\n")
           .append("import org.springframework.stereotype.Controller;\n")
@@ -449,35 +597,22 @@ public class SystemScaffoldController {
           .append("@RequiredArgsConstructor\n")
           .append("public class ").append(domainClass).append("Controller {\n\n")
           .append("    private final ").append(domainClass).append("Service service;\n\n")
-          .append("    /**\n")
-          .append("     * 화면(HTML) 반환\n")
-          .append("     */\n")
           .append("    @GetMapping\n")
           .append("    public String page() {\n")
           .append("        return \"").append(module).append("/").append(domainId).append("-manage\";\n")
           .append("    }\n\n")
-          .append("    /**\n")
-          .append("     * TUI Grid 용 데이터 API (JSON 반환)\n")
-          .append("     */\n")
           .append("    @ResponseBody\n")
           .append("    @GetMapping(\"/data\")\n")
           .append("    public ResponseEntity<ApiResponse<PageResponseDTO<").append(domainClass).append("VO>>> getData(@ModelAttribute ").append(domainClass).append("SearchRequestDTO request) {\n")
           .append("        return ResponseEntity.ok(ApiResponse.success(service.search(request)));\n")
           .append("    }\n");
-
         if (includeCud) {
-            sb.append("\n    /**\n")
-              .append("     * 단건 저장/수정 API\n")
-              .append("     */\n")
-              .append("    @ResponseBody\n")
+            sb.append("\n    @ResponseBody\n")
               .append("    @PostMapping(\"/save\")\n")
-              .append("    public ResponseEntity<ApiResponse<String>> save(@RequestBody ").append(domainClass).append("VO vo) {\n")
+              .append("    public ResponseEntity<ApiResponse<String>> save(@Valid @RequestBody ").append(domainClass).append("VO vo) {\n")
               .append("        service.save(vo);\n")
               .append("        return ResponseEntity.ok(ApiResponse.success(\"저장되었습니다.\"));\n")
               .append("    }\n\n")
-              .append("    /**\n")
-              .append("     * 단건 삭제 API\n")
-              .append("     */\n")
               .append("    @ResponseBody\n")
               .append("    @PostMapping(\"/delete\")\n")
               .append("    public ResponseEntity<ApiResponse<String>> delete(@RequestParam String id) {\n")
@@ -486,10 +621,7 @@ public class SystemScaffoldController {
               .append("    }\n");
         }
         if (includeExcel) {
-            sb.append("\n    /**\n")
-              .append("     * 엑셀 파일 다운로드 요청 처리\n")
-              .append("     */\n")
-              .append("    @GetMapping(\"/excel\")\n")
+            sb.append("\n    @GetMapping(\"/excel\")\n")
               .append("    public void downloadExcel(@ModelAttribute ").append(domainClass).append("SearchRequestDTO request, jakarta.servlet.http.HttpServletResponse response) {\n")
               .append("        service.downloadExcel(request, response);\n")
               .append("    }\n");
@@ -514,7 +646,6 @@ public class SystemScaffoldController {
           .append("    </div>\n\n")
           .append("    <div class=\"search-section\">\n")
           .append("        <div class=\"search-row\">\n");
-
         if (searchVars.isEmpty()) {
             sb.append("            <span class=\"search-label\">검색어</span>\n")
               .append("            <input type=\"text\" id=\"searchKeyword\" class=\"search-input\" placeholder=\"검색어 입력\">\n");
@@ -526,7 +657,6 @@ public class SystemScaffoldController {
                   .append("            <input type=\"").append(inputType).append("\" id=\"").append(var).append("\" class=\"search-input\" placeholder=\"입력\" style=\"width:150px; margin-right:15px;\">\n");
             }
         }
-        
         sb.append("            \n")
           .append("            <div class=\"search-divider\"></div>\n")
           .append("            \n")
@@ -566,16 +696,31 @@ public class SystemScaffoldController {
     }
 
     private String getJsTemplate(String module, String domainId, String domainName, String[] cols, List<String> searchVars, boolean includeExcel, boolean includeExcelGrid) {
+        // 날짜 필드 감지
+        List<String> dateVars = searchVars.stream()
+            .filter(v -> { String l = v.toLowerCase();
+                return l.contains("date") || l.contains("dt") || l.endsWith("at"); })
+            .collect(Collectors.toList());
+
         StringBuilder sb = new StringBuilder();
-        sb.append("/**\n")
-          .append(" * ").append(domainId).append("-manage.js\n")
-          .append(" * ").append(domainName).append(" 화면 스크립트\n")
-          .append(" */\n")
-          .append("document.addEventListener('DOMContentLoaded', function () {\n")
-          .append("    const pageBuilder = new TuiPageBuilder({\n")
+        sb.append("document.addEventListener('DOMContentLoaded', function () {\n");
+
+        if (!dateVars.isEmpty()) {
+            sb.append("    // 날짜 필드 당일 기본값 셋팅\n")
+              .append("    const today = new Date().toISOString().split('T')[0];\n");
+            for (String dv : dateVars) {
+                sb.append("    const _el").append(dv).append(" = document.querySelector('#").append(dv).append("');\n")
+                  .append("    if (_el").append(dv).append(" && !_el").append(dv).append(".value) {\n")
+                  .append("        _el").append(dv).append(".value = _el").append(dv).append(".type === 'datetime-local' ? today + 'T00:00' : today;\n")
+                  .append("    }\n");
+            }
+            sb.append("\n");
+        }
+
+        sb.append("    const pageBuilder = new TuiPageBuilder({\n")
           .append("        el: 'grid',\n")
           .append("        apiUrl: '/").append(module).append("/").append(domainId).append("/data',\n");
-          
+
         if (searchVars.isEmpty()) {
             sb.append("        searchInputs: ['searchKeyword'],\n");
         } else {
@@ -586,15 +731,15 @@ public class SystemScaffoldController {
             }
             sb.append("],\n");
         }
-        
+
         sb.append("        rowHeaders: ['rowNum'],\n")
           .append("        columns: [\n");
-        
+
         if (cols.length == 0) {
             sb.append("            { header: '예시 데이터', name: 'exampleColumn', align: 'center', width: 250 }\n");
         } else {
             for (int i = 0; i < cols.length; i++) {
-                if(!cols[i].trim().isEmpty()) {
+                if (!cols[i].trim().isEmpty()) {
                     sb.append("            { header: '").append(cols[i].trim()).append("', name: '").append(toCamelCase(cols[i].trim())).append("', align: 'center', width: 150 }");
                     if (i < cols.length - 1) sb.append(",");
                     sb.append("\n");
@@ -605,21 +750,19 @@ public class SystemScaffoldController {
           .append("        autoModal: true,\n")
           .append("        autoModalTitle: '").append(domainName).append(" 상세'\n")
           .append("    });\n\n")
-          .append("    // 신규 등록 버튼 이벤트 예시\n")
-          .append("    document.getElementById('btn-create')?.addEventListener('click', () => {\n")
+          .append("    document.querySelector('#btn-create')?.addEventListener('click', () => {\n")
           .append("        alert('신규 등록 팝업 구현');\n")
           .append("    });\n");
 
         if (includeExcel) {
-            sb.append("\n    // 대용량 엑셀 다운로드 이벤트 (Backend)\n")
-              .append("    document.getElementById('btn-excel')?.addEventListener('click', () => {\n");
+            sb.append("\n    document.querySelector('#btn-excel')?.addEventListener('click', () => {\n");
             if (searchVars.isEmpty()) {
-                sb.append("        const qs = `?searchKeyword=${document.getElementById('searchKeyword').value}`;\n");
+                sb.append("        const qs = `?searchKeyword=${document.querySelector('#searchKeyword').value}`;\n");
             } else {
                 sb.append("        const qs = `?");
                 for (int i = 0; i < searchVars.size(); i++) {
                     if (i > 0) sb.append("&");
-                    sb.append(searchVars.get(i)).append("=${document.getElementById('").append(searchVars.get(i)).append("').value}");
+                    sb.append(searchVars.get(i)).append("=${document.querySelector('#").append(searchVars.get(i)).append("').value}");
                 }
                 sb.append("`;\n");
             }
@@ -628,8 +771,7 @@ public class SystemScaffoldController {
         }
 
         if (includeExcelGrid) {
-            sb.append("\n    // 현재 화면 엑셀 다운로드 이벤트 (TUI Grid Native)\n")
-              .append("    document.getElementById('btn-excel-grid')?.addEventListener('click', () => {\n")
+            sb.append("\n    document.querySelector('#btn-excel-grid')?.addEventListener('click', () => {\n")
               .append("        pageBuilder.getGrid().export('xlsx', { fileName: '").append(domainName).append("_화면데이터' });\n")
               .append("    });\n");
         }

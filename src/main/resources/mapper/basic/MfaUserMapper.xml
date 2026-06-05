@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.sms.mapper.basic.MfaUserMapper">
+
+    <!--
+        TODO:
+          1. MFA_YN — EMPLOYEE 테이블에 컬럼 없음. 추가되면 'N' 자리를 e.MFA_YN 으로 교체.
+          2. 사용자그룹명(userGroupNm) — 현재 USER_ROLE 값 그대로 출력.
+             TB_AUTHORITY 또는 별도 그룹 테이블이 있으면 JOIN 으로 교체.
+    -->
+
+    <sql id="searchConditions">
+        <where>
+            <if test="userGroupCode != null and userGroupCode != ''">
+                AND e.USER_ROLE = #{userGroupCode}
+            </if>
+            <if test="userRole != null and userRole != ''">
+                AND e.USER_ROLE = #{userRole}
+            </if>
+            <if test="empName != null and empName != ''">
+                AND e.EMP_NAME LIKE '%' || #{empName} || '%'
+            </if>
+            <if test="empId != null and empId != ''">
+                AND e.EMP_ID LIKE '%' || #{empId} || '%'
+            </if>
+        </where>
+    </sql>
+
+    <select id="count" resultType="int">
+        SELECT COUNT(1)
+        FROM EMPLOYEE e
+        <include refid="searchConditions"/>
+    </select>
+
+    <select id="selectList" resultType="com.example.sms.vo.basic.MfaUserVO">
+        SELECT
+            e.USER_ROLE AS userGroupCode,
+            e.USER_ROLE AS userGroupNm,
+            e.EMP_ID    AS empId,
+            e.EMP_NAME  AS empName,
+            e.USER_ROLE AS userRole,
+            e.USE_YN    AS useYn,
+            e.MFA_YN    AS mfaYn
+        FROM EMPLOYEE e
+        <include refid="searchConditions"/>
+        ORDER BY e.CREATED_AT DESC, e.EMP_ID ASC
+        OFFSET #{offset} ROWS FETCH NEXT #{size} ROWS ONLY
+    </select>
+
+</mapper>

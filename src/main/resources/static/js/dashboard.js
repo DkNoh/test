@@ -1,11 +1,30 @@
 /**
  * dashboard.js
- * 대시보드 데이터를 10초마다 AJAX로 폴링하여 갱신
+ * 대시보드 데이터를 5분마다 AJAX로 폴링하여 갱신
  */
 document.addEventListener('DOMContentLoaded', function () {
-    const POLL_INTERVAL = 10000; // 10초
+    const POLL_INTERVAL = 5 * 60 * 1000; // 5분
+
+    const refreshBtn  = document.getElementById('dashboard-refresh-btn');
+    const refreshIcon = document.getElementById('refresh-icon');
+    const lastUpdated = document.getElementById('dashboard-last-updated');
+
+    function setRefreshing(loading) {
+        refreshBtn.disabled = loading;
+        refreshIcon.style.transition = loading ? 'transform 0.6s linear' : '';
+        refreshIcon.style.transform  = loading ? 'rotate(360deg)' : '';
+    }
+
+    function updateTimestamp() {
+        const now = new Date();
+        const hh = String(now.getHours()).padStart(2, '0');
+        const mm = String(now.getMinutes()).padStart(2, '0');
+        const ss = String(now.getSeconds()).padStart(2, '0');
+        lastUpdated.textContent = `마지막 갱신: ${hh}:${mm}:${ss}`;
+    }
 
     function fetchDashboardData() {
+        setRefreshing(true);
         axios.get('/api/dashboard/summary')
             .then(res => {
                 const data = res.data;
@@ -13,9 +32,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 renderWeeklyTrend(data.weeklyTrend);
                 renderChannelRatio(data.channelRatio);
                 renderFailLogs(data.recentFailLogs);
+                updateTimestamp();
             })
             .catch(err => {
                 console.error('대시보드 데이터 조회 실패:', err);
+            })
+            .finally(() => {
+                setRefreshing(false);
             });
     }
 
@@ -30,7 +53,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function renderWeeklyTrend(trends) {
         const container = document.getElementById('weekly-trend-container');
         if (!trends || !container) return;
-        
+
         container.innerHTML = '';
         trends.forEach(trend => {
             container.innerHTML += `
@@ -50,7 +73,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function renderChannelRatio(ratios) {
         const container = document.getElementById('channel-ratio-container');
         if (!ratios || !container) return;
-        
+
         container.innerHTML = '';
         ratios.forEach(ratio => {
             container.innerHTML += `
@@ -73,11 +96,11 @@ document.addEventListener('DOMContentLoaded', function () {
     function renderFailLogs(logs) {
         const tbody = document.getElementById('fail-log-tbody');
         if (!logs || !tbody) return;
-        
+
         tbody.innerHTML = '';
         logs.forEach(log => {
             let badgeClass = 'bg-secondary';
-            if (log.sendType === 'SMS') badgeClass = 'bg-primary text-white';
+            if (log.sendType === 'SMS')      badgeClass = 'bg-primary text-white';
             else if (log.sendType === 'LMS') badgeClass = 'bg-success text-white';
             else if (log.sendType === 'MMS') badgeClass = 'bg-danger text-white';
             else if (log.sendType === 'ALIMTALK') badgeClass = 'bg-warning text-dark';
@@ -95,9 +118,9 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // 1. 페이지 로딩 즉시 1회 호출
-    fetchDashboardData();
+    refreshBtn.addEventListener('click', fetchDashboardData);
 
-    // 2. 이후 10초 주기로 폴링
+    // 페이지 로딩 즉시 1회 호출 후 5분 주기 폴링
+    fetchDashboardData();
     setInterval(fetchDashboardData, POLL_INTERVAL);
 });

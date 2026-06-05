@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.sms.mapper.basic.MessageMapper">
+
+    <!--
+        TODO: 실제 메세지 테이블명·컬럼명 확인 후 교체 필요.
+              현재 TB_MESSAGE(가칭)과 TB_DEPT 조인 구조로 작성됨.
+              예상 컬럼: MSG_ID, DEPT_ID, MSG_CODE, FORBID_YN, MSG_TITLE, REG_DT, SEND_POINT, MSG_CONTENT
+    -->
+
+    <select id="count" resultType="int">
+        SELECT COUNT(1)
+        FROM TB_MESSAGE m
+        /* TODO: LEFT JOIN TB_DEPT d ON m.DEPT_ID = d.DEPT_ID */
+    </select>
+
+    <select id="selectList" resultType="com.example.sms.vo.basic.MessageVO">
+        SELECT
+            d.DEPT_NM   AS deptNm,
+            m.MSG_CODE  AS msgCode,
+            m.FORBID_YN AS forbidYn,
+            m.MSG_TITLE AS msgTitle,
+            m.REG_DT    AS regDt,
+            m.SEND_POINT AS sendPoint,
+            m.MSG_CONTENT AS msgContent
+        FROM TB_MESSAGE m
+        /* TODO: LEFT JOIN TB_DEPT d ON m.DEPT_ID = d.DEPT_ID */
+        ORDER BY m.REG_DT DESC, m.MSG_ID DESC
+        OFFSET #{offset} ROWS FETCH NEXT #{size} ROWS ONLY
+    </select>
+
+</mapper>

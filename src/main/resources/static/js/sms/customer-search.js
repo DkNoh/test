@@ -1,89 +1,33 @@
 document.addEventListener('DOMContentLoaded', function () {
-    
-    let currentPage = 1;
-    let currentSize = 10;
 
-    // ── Grid 초기화 ───────────────────────────────────────
-    const grid = new tui.Grid({
-        el:   document.querySelector('#grid'),
-        data: [],
-        ...TuiCommon.gridDefaults,
+    const statusBadge = v =>
+        v === 'SUCCESS' ? '<span class="badge badge-success">성공</span>'
+        : v === 'FAIL'  ? '<span class="badge badge-fail">실패</span>'
+        : v === 'WAIT'  ? '<span class="badge" style="background:#ffc107;color:#000;">대기</span>'
+        : (v ?? '');
+
+    new TuiPageBuilder({
+        el: 'grid',
+        apiUrl: '/sms/customer/data',
+        searchInputs: ['msgType', 'receiverNo', 'searchDate'],
+        rowHeaders: ['rowNum'],
         columns: [
-            { header: '발송일시',   name: 'sentAt',     width: 148, align: 'center', sortable: true,
-              formatter: ({ value }) => TuiCommon.fmt.date(value) },
-            { header: '고객 ID(수신)',name: 'receiverNo', width: 120, align: 'center' },
-            { header: '발신번호',   name: 'senderNo',   width: 120, align: 'center' },
-            { header: '메시지내용', name: 'message',    minWidth: 220,
-              formatter: ({ value }) => value || '-' },
-            { header: '발송상태',   name: 'sendStatus', width: 88,  align: 'center', sortable: true,
-              formatter: TuiCommon.fmt.sendStatus },
-            { header: '발송유형',   name: 'sendType',   width: 88,  align: 'center',
-              formatter: TuiCommon.fmt.sendType },
-        ],
+            { header: '발송시간',   name: 'sentAt',       width: 160, align: 'center' },
+            { header: '받은시간',   name: 'receivedAt',   width: 160, align: 'center' },
+            { header: '예금주명',   name: 'holderName',   width: 120, align: 'center' },
+            { header: '수신번호',   name: 'receiverNo',   width: 140, align: 'center' },
+            { header: '회신번호',   name: 'senderNo',     width: 130, align: 'center' },
+            { header: '메세지내용', name: 'message',      minWidth: 200, align: 'left' },
+            { header: '중개업체',   name: 'intermediary', width: 100, align: 'center' },
+            { header: '결과',       name: 'sendStatus',   width: 90,  align: 'center',
+              formatter: ({value}) => statusBadge(value) },
+            { header: '부서',       name: 'deptNm',       width: 120, align: 'center' }
+        ]
     });
 
-    function loadData() {
-        const customerId = document.querySelector('#customerId').value.trim();
-        const searchKeyword = document.querySelector('#searchKeyword').value.trim();
-        const alertBox = document.querySelector('#validationAlert');
-        
-        alertBox.style.display = 'none';
-
-        const requestBody = {
-            customerId: customerId,
-            searchKeyword: searchKeyword,
-            page: currentPage,
-            size: currentSize
-        };
-
-        axios.post(`${SERVER_DATA.apiUrl}/customer-search`, requestBody)
-            .then(response => {
-                grid.resetData(response.data.contents || []);
-                TuiCommon.updateTotalCount(response.data.totalCount || 0);
-                TuiCommon.renderPagination(response.data.page || 1, response.data.totalPages || 1, movePage);
-            })
-            .catch(error => {
-                let errorMsg = error.response?.data?.message || '알 수 없는 오류가 발생했습니다.';
-                
-                alertBox.innerHTML = `<strong>규약 위반 에러:</strong><br>${errorMsg}`;
-                alertBox.style.display = 'block';
-                
-                grid.resetData([]);
-                TuiCommon.updateTotalCount(0);
-                TuiCommon.renderPagination(1, 1, movePage);
-            });
-    }
-
-    function movePage(page) { 
-        currentPage = page; 
-        loadData(); 
-    }
-
-    document.querySelector('#btn-search').addEventListener('click', () => { 
-        currentPage = 1; 
-        loadData(); 
-    });
-
-    document.querySelector('#btn-reset').addEventListener('click', () => { 
-        document.querySelector('#customerId').value = '';
-        document.querySelector('#searchKeyword').value = '';
-        document.querySelector('#validationAlert').style.display = 'none';
-        grid.resetData([]);
-        TuiCommon.updateTotalCount(0);
-        TuiCommon.renderPagination(1, 1, movePage);
-    });
-
-    document.querySelector('#pageSizeSelect').addEventListener('change', e => { 
-        currentSize = +e.target.value; 
-        currentPage = 1; 
-        loadData(); 
-    });
-
-    document.querySelector('#customerId').addEventListener('keydown', e => { 
-        if (e.key === 'Enter') { currentPage = 1; loadData(); } 
-    });
-    
-    document.querySelector('#searchKeyword').addEventListener('keydown', e => { 
-        if (e.key === 'Enter') { currentPage = 1; loadData(); } 
-    });
+    const hiddenMsgType = Object.assign(document.createElement('input'), { type: 'hidden', id: 'msgType', value: 'SMS' });
+    document.body.appendChild(hiddenMsgType);
+    document.querySelectorAll('input[name="msgType"]').forEach(r =>
+        r.addEventListener('change', () => { hiddenMsgType.value = r.value; })
+    );
 });

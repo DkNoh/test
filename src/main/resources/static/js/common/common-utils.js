@@ -243,21 +243,35 @@ const CommonUtils = (() => {
 
         const toDate = d => {
             const yyyy = d.getFullYear();
-            const mm = String(d.getMonth() + 1).padStart(2, '0');
-            const dd = String(d.getDate()).padStart(2, '0');
+            const mm   = String(d.getMonth() + 1).padStart(2, '0');
+            const dd   = String(d.getDate()).padStart(2, '0');
             return `${yyyy}-${mm}-${dd}`;
         };
         const toTime = d => d.toTimeString().slice(0, 5);
+        const todayStr = toDate(now);
 
+        // ① 분리형: #startDate / #startTime / #endDate / #endTime
         const startDate = document.querySelector('#startDate');
         const endDate   = document.querySelector('#endDate');
         const startTime = document.querySelector('#startTime');
         const endTime   = document.querySelector('#endTime');
 
-        if (startDate && (forceReset || !startDate.value)) startDate.value = toDate(now);
-        if (endDate && (forceReset || !endDate.value))     endDate.value   = toDate(now);
+        if (startDate && (forceReset || !startDate.value)) startDate.value = todayStr;
+        if (endDate   && (forceReset || !endDate.value))   endDate.value   = todayStr;
         if (startTime && (forceReset || !startTime.value)) startTime.value = toTime(from);
-        if (endTime && (forceReset || !endTime.value))     endTime.value   = toTime(to);
+        if (endTime   && (forceReset || !endTime.value))   endTime.value   = toTime(to);
+
+        // ② 통합형: datetime-local input (#startDateTime / #endDateTime 또는 data-default-date)
+        const startDT = document.querySelector('#startDateTime');
+        const endDT   = document.querySelector('#endDateTime');
+
+        if (startDT && (forceReset || !startDT.value)) startDT.value = `${todayStr}T00:00`;
+        if (endDT   && (forceReset || !endDT.value))   endDT.value   = `${todayStr}T23:59`;
+
+        // ③ 단순 date type input (날짜만, 시간 없음)
+        document.querySelectorAll('input[type="date"]').forEach(el => {
+            if (forceReset || !el.value) el.value = todayStr;
+        });
     };
 
     const getSearchParams = () => {
@@ -343,8 +357,117 @@ const CommonUtils = (() => {
         initCombos();
     });
 
+    // ════════════════════════════════════════════════════
+    //  Autocomplete (말풍선 자동완성) 공통 초기화
+    //  사용 예)
+    //  CommonUtils.initAutocomplete({
+    //      inputEl:   '#bankCdText',
+    //      balloonEl: '#bankBalloon',
+    //      apiUrl:    '/api/common-code/bank',
+    //      syncCombo: '#bankCdCombo',   // 선택사항
+    //      minLength:  1,
+    //      debounceMs: 200,
+    //      onSelect: (item) => console.log(item) // 선택사항
+    //  });
+    // ════════════════════════════════════════════════════
+    const initAutocomplete = ({
+        inputEl, balloonEl, apiUrl,
+        syncCombo  = null,
+        paramName  = 'keyword',
+        minLength  = 1,
+        debounceMs = 200,
+        renderItem = null,
+        onSelect   = null
+    } = {}) => {
+        const input   = typeof inputEl   === 'string' ? document.querySelector(inputEl)   : inputEl;
+        const balloon = typeof balloonEl === 'string' ? document.querySelector(balloonEl) : balloonEl;
+        const combo   = syncCombo ? (typeof syncCombo === 'string' ? document.querySelector(syncCombo) : syncCombo) : null;
+
+        if (!input || !balloon) {
+            console.warn('[Autocomplete] inputEl 또는 balloonEl을 찾을 수 없습니다.', { inputEl, balloonEl });
+            return;
+        }
+
+        let debounceTimer;
+
+        // 기본 아이템 렌더링
+        const _renderItem = renderItem || ((item) =>
+            `<div class="autocomplete-item" data-code="${item.code}" data-name="${item.name}">
+                <span class="ac-code">${item.code}</span>
+                <span class="ac-name">${item.name}</span>
+             </div>`
+        );
+
+        const _close = () => { balloon.style.display = 'none'; };
+
+        const _select = (code, name) => {
+            input.value = code;
+            // 코드로 값을 직접 설정하면 브라우저 input 이벤트가 발생하지 않으므로 수동 dispatch
+            // → 외부에서 input 이벤트를 감지하는 syncBankCd 등의 핸들러가 정상 동작
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+
+            if (combo) {
+                combo.value = code;
+                combo.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+            _close();
+            if (onSelect) onSelect({ code, name });
+        };
+
+        // 콤보 → 텍스트 동기화
+        if (combo) {
+            combo.addEventListener('change', () => {
+                input.value = combo.value;
+                _close();
+            });
+        }
+
+        // 텍스트 입력 → 검색
+        input.addEventListener('input', () => {
+            clearTimeout(debounceTimer);
+            const kw = input.value.trim();
+
+            if (kw.length < minLength) {
+                _close();
+                if (combo) combo.value = '';
+                return;
+            }
+
+            debounceTimer = setTimeout(() => {
+                fetch(`${apiUrl}?${paramName}=${encodeURIComponent(kw)}`)
+                    .then(r => r.json())
+                    .then(res => {
+                        // axios 인터셉터가 언래핑하지 않으므로 직접 처리
+                        const list = (res.data ?? res) || [];
+                        if (!list.length) {
+                            balloon.innerHTML = '<div class="ac-empty">검색 결과 없음</div>';
+                            balloon.style.display = 'block';
+                            return;
+                        }
+                        balloon.innerHTML = list.map(_renderItem).join('');
+                        balloon.style.display = 'block';
+
+                        balloon.querySelectorAll('.autocomplete-item').forEach(item => {
+                            item.addEventListener('click', () =>
+                                _select(item.dataset.code, item.dataset.name));
+                        });
+                    })
+                    .catch(() => _close());
+            }, debounceMs);
+        });
+
+        // 외부 클릭 시 닫기
+        document.addEventListener('click', e => {
+            if (!input.contains(e.target) && !balloon.contains(e.target)) _close();
+        });
+
+        // 컨트롤러 반환 (필요 시 외부에서 제어)
+        return { close: _close, select: _select };
+    };
+
     return {
         initCombos,
+        initAutocomplete,
         setDefaultDateTime,
         getSearchParams,
         resetFields,

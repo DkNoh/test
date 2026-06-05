@@ -4,71 +4,54 @@
 
     <sql id="searchConditions">
         <where>
+            <if test="startDateTime != null and startDateTime != '' and endDateTime != null and endDateTime != ''">
+                AND SENT_AT &gt;= TO_TIMESTAMP(REPLACE(#{startDateTime}, 'T', ' '), 'YYYY-MM-DD HH24:MI')
+                AND SENT_AT &lt;= TO_TIMESTAMP(REPLACE(#{endDateTime},   'T', ' '), 'YYYY-MM-DD HH24:MI')
+            </if>
+            <if test="sendStatus != null and sendStatus != ''">
+                AND SEND_STATUS = #{sendStatus}
+            </if>
+            <if test="receiverNo != null and receiverNo != ''">
+                AND RECEIVER_NO LIKE '%' || #{receiverNo} || '%'
+            </if>
+            <if test="sendType != null and sendType != ''">
+                AND SEND_TYPE = #{sendType}
+            </if>
         </where>
     </sql>
 
     <select id="count" resultType="int">
-        SELECT COUNT(1) FROM (
-            SELECT 
-              A.MSG_ID,
-              A.SENDER_ID,
-              A.RECEIVER_PHONE,
-              A.MSG_TYPE,
-              A.SEND_STATUS,
-              A.SEND_DT
-            FROM TB_SMS_HISTORY A
-            WHERE 1=1
-            <if test="startDate != null and startDate != '' and endDate != null and endDate != ''">
-                  AND A.SEND_DT BETWEEN #{startDate} AND #{endDate}
-            </if>
-            <if test="receiverNo != null and receiverNo != ''">
-                  AND A.RECEIVER_PHONE LIKE '%' || #{receiverNo} || '%'
-            </if>
-            <if test="sendType != null and sendType != ''">
-                  AND A.MSG_TYPE = #{sendType}
-            </if>
-        ) A
+        SELECT COUNT(1) FROM SMS_HISTORY
         <include refid="searchConditions"/>
     </select>
 
     <select id="selectList" resultType="com.example.sms.vo.sms.SmsHistoryVO">
-        SELECT * FROM (
-            SELECT A.*, ROWNUM AS RNUM FROM (
-                SELECT X.* FROM (
-                    SELECT 
-                      A.MSG_ID,
-                      A.SENDER_ID,
-                      A.RECEIVER_PHONE,
-                      A.MSG_TYPE,
-                      A.SEND_STATUS,
-                      A.SEND_DT
-                    FROM TB_SMS_HISTORY A
-                    WHERE 1=1
-                    <if test="startDate != null and startDate != '' and endDate != null and endDate != ''">
-                          AND A.SEND_DT BETWEEN #{startDate} AND #{endDate}
-                    </if>
-                    <if test="receiverNo != null and receiverNo != ''">
-                          AND A.RECEIVER_PHONE LIKE '%' || #{receiverNo} || '%'
-                    </if>
-                    <if test="sendType != null and sendType != ''">
-                          AND A.MSG_TYPE = #{sendType}
-                    </if>
-                ) X
-                <include refid="searchConditions"/>
-            ) A WHERE ROWNUM <![CDATA[<=]]> #{offset} + #{size}
-        ) WHERE RNUM > #{offset}
+        SELECT
+            h.ID, h.CAMPAIGN_NAME, h.SEND_TYPE, h.SENDER_NO, h.RECEIVER_NO,
+            h.MESSAGE, h.SEND_STATUS, h.RESEND_YN, h.RESULT_CODE, h.RESULT_MESSAGE,
+            (SELECT sl.TELECOM FROM SMS_SEND_LOG sl
+             WHERE sl.RECEIVER_NO = h.RECEIVER_NO AND ROWNUM = 1) AS telecom,
+            h.RESERVED_AT, h.SENT_AT, h.CREATED_AT, h.UPDATED_AT
+        FROM SMS_HISTORY h
+        <include refid="searchConditions"/>
+        ORDER BY h.SENT_AT DESC, h.ID DESC
+        OFFSET #{offset} ROWS FETCH NEXT #{size} ROWS ONLY
     </select>
 
     <insert id="insert">
-        INSERT INTO /* TODO: 테이블명 */ (REG_DT) VALUES (SYSDATE)
+        INSERT INTO SMS_HISTORY (CAMPAIGN_NAME, SEND_TYPE, SENDER_NO, RECEIVER_NO, MESSAGE, SEND_STATUS)
+        VALUES (#{campaignName}, #{sendType}, #{senderNo}, #{receiverNo}, #{message}, #{sendStatus})
     </insert>
 
     <update id="update">
-        UPDATE /* TODO: 테이블명 */ SET MOD_DT = SYSDATE WHERE ID = #{id}
+        UPDATE SMS_HISTORY
+        SET SEND_STATUS = #{sendStatus}, RESULT_CODE = #{resultCode},
+            RESULT_MESSAGE = #{resultMessage}, SENT_AT = #{sentAt}, UPDATED_AT = CURRENT_TIMESTAMP
+        WHERE ID = #{id}
     </update>
 
     <delete id="delete">
-        DELETE FROM /* TODO: 테이블명 */ WHERE ID = #{id}
+        DELETE FROM SMS_HISTORY WHERE ID = #{id}
     </delete>
 
 </mapper>
