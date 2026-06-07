@@ -1,9 +1,11 @@
-# Maven
+# Maven / build output
 target/
 pom.xml.tag
 pom.xml.releaseBackup
 pom.xml.versionsBackup
 *.class
+*.jar
+*.war
 
 # IDE (Eclipse/STS, IntelliJ, VSCode)
 .settings/
@@ -18,7 +20,24 @@ pom.xml.versionsBackup
 .DS_Store
 Thumbs.db
 
-# Runtime / local scratch
+# Runtime logs
 logs/
+*.log
+
+# Runtime / local scratch
 scratch/
+Codex.local.md
 CLAUDE.local.md
+
+# Local environment / secrets
+.env
+.env.*
+application-local.yml
+
+# Shared local seed/export SQL
+# db/export/ is intentionally tracked when it contains reproducible dummy data.
+
+# Local-only DB export/import files
+db/local/
+*.dmp
+*.dump
