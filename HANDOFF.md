@@ -36,3 +36,20 @@ CLI 첫 세션에서 이렇게 시작하면 된다:
 
 ## 참고
 - 각 룰의 path-scoped glob은 실제 파일명에 맞게 조정 가능 (`.claude/rules/*.md` 상단 `paths`).
+## 2026-06-07 Local Oracle SQL Export Handoff
+- Local Docker Oracle 접속 확인 완료: `SYSTEM/1234@//localhost:1521/SMS`.
+- 프로젝트 관련 export 대상 테이블은 총 24개:
+  `TB_APPROVAL`, `TB_APPROVAL_HIST`, `TB_ATTACH_FILE`, `TB_AUTHORITY`, `TB_BANK`,
+  `TB_CONTACT`, `TB_CONTACT_GROUP`, `TB_CURRENCY`, `TB_CUSTOMER_SSN`, `TB_DEP`,
+  `TB_DEPT`, `TB_EMP`, `TB_EXCHANGE_RATE`, `TB_GROUP_CONTACT_MAP`, `TB_MENU`,
+  `TB_MENU_AUTH`, `TB_MESSAGE`, `TB_PRIVACY_AUDIT_LOG`, `TB_RATE_PROVIDER`,
+  `TB_SMS_HISTORY`, `CAMPAIGN`, `EMPLOYEE`, `SMS_HISTORY`, `SMS_SEND_LOG`.
+- SQL export 생성 스크립트: `tools/export_project_tables_sql.sql`.
+- 생성된 로컬 더미 데이터 SQL 위치: `db/export/sms-project-v2-project-tables.sql`.
+  두 로컬 개발 환경 간 이동 목적의 더미 데이터이므로 git commit 대상에 포함해도 된다.
+- export 규칙: `SMS_HISTORY`는 10,010건 중 500건만 포함, 나머지 대상 테이블은 전체 데이터 포함.
+- 최종 파일 검증 결과: 전체 INSERT 1,667건, `SMS_HISTORY` INSERT 500건, `GENERATED ALWAYS AS IDENTITY` 없음.
+- 다른 PC에서 재생성하려면 Oracle 컨테이너가 떠 있는 상태에서 아래를 실행:
+  `Get-Content -Raw .\tools\export_project_tables_sql.sql | docker exec -i oracle sqlplus -L -S SYSTEM/1234@//localhost:1521/SMS`
+  이후 컨테이너 `/tmp/sms-project-v2-project-tables.sql`을 필요한 로컬 위치로 복사한다.
+- 생성된 SQL은 맨 앞에 `drop table ... cascade constraints purge;`가 있으므로 기존 schema에 실행하면 동일 테이블을 삭제 후 재생성한다.
